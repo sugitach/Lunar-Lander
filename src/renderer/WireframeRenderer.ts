@@ -8,6 +8,7 @@ export class WireframeRenderer implements IRenderer {
     private ctx: CanvasRenderingContext2D | null = null;
     private width: number = 0;
     private height: number = 0;
+    private resizeBound = this.resize.bind(this);
 
     initialize(container: HTMLElement): void {
         this.canvas = document.createElement('canvas');
@@ -16,7 +17,11 @@ export class WireframeRenderer implements IRenderer {
         this.ctx = this.canvas.getContext('2d');
 
         this.resize();
-        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('resize', this.resizeBound);
+    }
+
+    dispose(): void {
+        window.removeEventListener('resize', this.resizeBound);
     }
 
     private resize(): void {

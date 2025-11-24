@@ -4,9 +4,17 @@ export class Input {
     public isThrusting: boolean = false;
     public isRestarting: boolean = false;
 
+    private handleKeyDownBound = this.handleKeyDown.bind(this);
+    private handleKeyUpBound = this.handleKeyUp.bind(this);
+
     constructor() {
-        window.addEventListener('keydown', this.handleKeyDown.bind(this));
-        window.addEventListener('keyup', this.handleKeyUp.bind(this));
+        window.addEventListener('keydown', this.handleKeyDownBound);
+        window.addEventListener('keyup', this.handleKeyUpBound);
+    }
+
+    dispose() {
+        window.removeEventListener('keydown', this.handleKeyDownBound);
+        window.removeEventListener('keyup', this.handleKeyUpBound);
     }
 
     private handleKeyDown(event: KeyboardEvent): void {
