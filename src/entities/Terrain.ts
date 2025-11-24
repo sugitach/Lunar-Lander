@@ -41,14 +41,10 @@ export class Terrain {
         ];
 
         const padLocations: number[] = [];
+        const MAX_RETRIES = 100;
+        let retries = 0;
 
-        for (let i = 0; i < numPads; i++) {
-            // Pick a range randomly, weighted by space?
-            // Let's just alternate or pick random valid spots.
-            // Simple approach: Try to place 3 pads.
-            // 1 Left, 1 Right, 1 Random?
-            // Or just random within valid ranges.
-
+        for (let i = 0; i < numPads && retries < MAX_RETRIES; i++) {
             const range = possibleRanges[Math.floor(Math.random() * possibleRanges.length)];
             const padX = range.min + Math.random() * (range.max - range.min);
 
@@ -57,12 +53,16 @@ export class Terrain {
             if (!tooClose) {
                 padLocations.push(padX);
             } else {
-                // Try again or skip
+                // Try again
                 i--;
-                // Safety break
-                if (Math.random() < 0.1) i++;
+                retries++;
             }
         }
+
+        if (padLocations.length < numPads) {
+            console.warn(`Could only place ${padLocations.length} out of ${numPads} landing pads`);
+        }
+
         padLocations.sort((a, b) => a - b);
 
         let lastX = 0;
