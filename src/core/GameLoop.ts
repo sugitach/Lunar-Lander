@@ -108,12 +108,21 @@ export class GameLoop {
     }
 
     private checkCollisions() {
-        // Check collision with terrain segments
-        // Lander shape is roughly a box or circle. Let's use feet points for landing check, and body for crash.
-        // For simplicity, let's check a few points on the lander against all terrain segments.
-        // Points: Left Foot, Right Foot, Top, Left, Right
+        const footCollision = this.checkFootCollisions();
+        if (footCollision) {
+            this.handleLandingOrCrash(footCollision.segmentIndex, footCollision.point, footCollision.isLeftFoot);
+            return;
+        }
 
-        // Transform local points to world
+        if (this.checkBodyCollision()) {
+            this.crash();
+            return;
+        }
+
+        this.checkBoundaries();
+    }
+
+    private calculateFootPositions() {
         const cos = Math.cos(this.lander.rotation + Math.PI / 2);
         const sin = Math.sin(this.lander.rotation + Math.PI / 2);
 
@@ -124,11 +133,6 @@ export class GameLoop {
             );
         };
 
-        // Feet coordinates from LANDER_CONSTANTS
-        const leftFoot = transform(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y);
-        const rightFoot = transform(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y);
-
-        // Calculate previous frame positions using actual stored values
         const prevCos = Math.cos(this.lander.previousRotation + Math.PI / 2);
         const prevSin = Math.sin(this.lander.previousRotation + Math.PI / 2);
 
@@ -139,10 +143,17 @@ export class GameLoop {
             );
         };
 
-        const prevLeftFoot = transformPrev(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y);
-        const prevRightFoot = transformPrev(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y);
+        return {
+            leftFoot: transform(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y),
+            rightFoot: transform(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y),
+            prevLeftFoot: transformPrev(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y),
+            prevRightFoot: transformPrev(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y)
+        };
+    }
 
-        // Check all terrain segments
+    private checkFootCollisions(): { segmentIndex: number; point: Vector2; isLeftFoot: boolean } | null {
+        const { leftFoot, rightFoot, prevLeftFoot, prevRightFoot } = this.calculateFootPositions();
+
         for (let i = 0; i < this.terrain.points.length - 1; i++) {
             const p1 = this.terrain.points[i];
             const p2 = this.terrain.points[i + 1];
@@ -150,27 +161,37 @@ export class GameLoop {
             // Check Left Foot
             let intersection = Physics.checkLineIntersection(prevLeftFoot, leftFoot, p1, p2);
             if (intersection) {
-                this.handleLandingOrCrash(i, intersection, true);
-                return;
+                return { segmentIndex: i, point: intersection, isLeftFoot: true };
             }
 
             // Check Right Foot
             intersection = Physics.checkLineIntersection(prevRightFoot, rightFoot, p1, p2);
             if (intersection) {
-                this.handleLandingOrCrash(i, intersection, false);
-                return;
-            }
-
-            // Check Body Center (Crash)
-            const center = this.lander.position;
-            const prevCenter = this.lander.previousPosition;
-            intersection = Physics.checkLineIntersection(prevCenter, center, p1, p2);
-            if (intersection) {
-                this.crash();
-                return;
+                return { segmentIndex: i, point: intersection, isLeftFoot: false };
             }
         }
 
+        return null;
+    }
+
+    private checkBodyCollision(): boolean {
+        const center = this.lander.position;
+        const prevCenter = this.lander.previousPosition;
+
+        for (let i = 0; i < this.terrain.points.length - 1; i++) {
+            const p1 = this.terrain.points[i];
+            const p2 = this.terrain.points[i + 1];
+
+            const intersection = Physics.checkLineIntersection(prevCenter, center, p1, p2);
+            if (intersection) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private checkBoundaries(): void {
         // Out of bounds
         if (this.lander.position.x < 0 || this.lander.position.x > window.innerWidth || this.lander.position.y < 0 || this.lander.position.y > window.innerHeight) {
             // Wrap X
