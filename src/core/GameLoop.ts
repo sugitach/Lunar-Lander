@@ -1,5 +1,5 @@
 import { GameState, GameStatus } from './GameState';
-import { Input } from './Input';
+import type { IInputSource } from './IInputSource';
 import type { IRenderer } from '../renderer/IRenderer';
 import { Lander } from '../entities/Lander';
 import { Terrain } from '../entities/Terrain';
@@ -7,28 +7,32 @@ import { Debug } from './Debug';
 import { CollisionDetector } from './CollisionDetector';
 import { GameStateManager } from './GameStateManager';
 import { DebrisManager } from './DebrisManager';
+import type { ViewportSize } from './ViewportSize';
 
 export class GameLoop {
     private gameState: GameState;
-    private input: Input;
+    private input: IInputSource;
     private renderer: IRenderer;
     private lander: Lander;
     private terrain: Terrain;
+    private viewport: ViewportSize;
     private lastTime: number = 0;
     private boundLoop: (timestamp: number) => void;
+    private isRunning = false;
 
     // Manager classes
     private collisionDetector: CollisionDetector;
     private gameStateManager: GameStateManager;
     private debrisManager: DebrisManager;
 
-    constructor(renderer: IRenderer) {
+    constructor(renderer: IRenderer, input: IInputSource, viewport: ViewportSize) {
         this.renderer = renderer;
-        this.input = new Input();
+        this.input = input;
+        this.viewport = viewport;
         this.gameState = new GameState();
-        this.gameState.status = GameStatus.PLAYING; // Start playing immediately
-        this.terrain = new Terrain(window.innerWidth, window.innerHeight);
-        this.lander = new Lander(window.innerWidth / 2, 100); // Initial position
+        this.gameState.status = GameStatus.PLAYING;
+        this.terrain = new Terrain(viewport.width, viewport.height);
+        this.lander = new Lander(viewport.width / 2, 100);
 
         // Initialize managers
         this.collisionDetector = new CollisionDetector();
@@ -37,11 +41,37 @@ export class GameLoop {
 
         // Bind loop once for performance
         this.boundLoop = this.loop.bind(this);
-        // Start loop
+    }
+
+    /**
+     * ゲームループを開始します。
+     */
+    start(): void {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        this.lastTime = performance.now();
         requestAnimationFrame(this.boundLoop);
     }
 
-    private loop(timestamp: number) {
+    /**
+     * ゲームループを停止します。
+     */
+    stop(): void {
+        this.isRunning = false;
+    }
+
+    /**
+     * テスト用: 1フレームだけ更新します。
+     * 
+     * @param deltaTime - 経過時間（秒）
+     */
+    updateOnce(deltaTime: number): void {
+        this.update(deltaTime);
+    }
+
+    private loop(timestamp: number): void {
+        if (!this.isRunning) return;
+
         const deltaTime = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
 
@@ -92,10 +122,10 @@ export class GameLoop {
             return;
         }
 
-        this.collisionDetector.checkBoundaries(this.lander, window.innerWidth, window.innerHeight);
+        this.collisionDetector.checkBoundaries(this.lander, this.viewport.width, this.viewport.height);
 
         // Check floor crash
-        if (this.lander.position.y > window.innerHeight) {
+        if (this.lander.position.y > this.viewport.height) {
             this.crash();
         }
     }
@@ -131,7 +161,7 @@ export class GameLoop {
             this.gameStateManager.isSafeToLand(this.lander)
         );
 
-        this.renderer.drawUI(this.gameState, this.lander.velocity, window.innerHeight - this.lander.position.y);
+        this.renderer.drawUI(this.gameState, this.lander.velocity, this.viewport.height - this.lander.position.y);
 
         if (this.gameState.status === GameStatus.LANDED) {
             this.renderer.drawMessage("LANDED", `Score: ${this.gameState.score} (Press Space)`);
@@ -140,11 +170,11 @@ export class GameLoop {
         }
     }
 
-    private resetGame() {
+    private resetGame(): void {
         this.gameState = new GameState();
         this.gameState.status = GameStatus.PLAYING;
-        this.terrain = new Terrain(window.innerWidth, window.innerHeight);
-        this.lander = new Lander(window.innerWidth / 2, 100);
+        this.terrain = new Terrain(this.viewport.width, this.viewport.height);
+        this.lander = new Lander(this.viewport.width / 2, 100);
         this.debrisManager.clear();
     }
 }

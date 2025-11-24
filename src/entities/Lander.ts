@@ -1,6 +1,6 @@
 import { Vector2 } from '../core/Vector2';
 import { Physics, ROTATION_SPEED, FUEL_CONSUMPTION_THRUST, FUEL_CONSUMPTION_ROTATE } from '../core/Physics';
-import { Input } from '../core/Input';
+import type { IInputSource } from '../core/IInputSource';
 import { GameState } from '../core/GameState';
 import { LANDER_CONSTANTS } from '../core/Constants';
 
@@ -21,7 +21,7 @@ export class Lander {
         this.previousRotation = -Math.PI / 2;
     }
 
-    update(input: Input, gameState: GameState, deltaTime: number) {
+    update(input: IInputSource, gameState: GameState, deltaTime: number): void {
         // Save previous state for collision detection
         this.previousPosition = this.position.clone();
         this.previousRotation = this.rotation;
@@ -56,7 +56,7 @@ export class Lander {
         // Gravity
         this.velocity = Physics.applyGravity(this.velocity, timeScale);
 
-        // Apply velocity
+        // Update position
         this.position = this.position.add(this.velocity.multiply(timeScale));
     }
 }
