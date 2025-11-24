@@ -3,6 +3,7 @@ import { GameState } from '../core/GameState';
 
 export interface IRenderer {
     initialize(container: HTMLElement): void;
+    dispose(): void;
     clear(): void;
     drawLander(position: Vector2, rotation: number, isThrusting: boolean, isCrashed: boolean, isSafe: boolean): void;
     drawTerrain(points: Vector2[], pads?: { startIndex: number, endIndex: number, multiplier: number }[]): void;
