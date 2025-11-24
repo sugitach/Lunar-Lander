@@ -21,7 +21,7 @@ export class Debris {
         if (!this.active) return;
 
         // Gravity
-        this.velocity.y += PHYSICS_CONSTANTS.DEBRIS_GRAVITY;
+        this.velocity.y += PHYSICS_CONSTANTS.GRAVITY_Y;
 
         this.position = this.position.add(this.velocity);
         this.rotation += this.rotationSpeed;
