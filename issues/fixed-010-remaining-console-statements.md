@@ -1,5 +1,7 @@
 # Issue #010: 残存するconsole呼び出しの削除
 
+status: fixed
+
 ## 優先度
 🔴 高優先度
 
