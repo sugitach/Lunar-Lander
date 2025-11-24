@@ -218,7 +218,7 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.fillText(`ALTITUDE: ${Math.floor(altitude)}`, this.width - 200, 70);
     }
 
-    drawMessage(message: string, subMessage?: string): void {
+    drawMessage(message: string, subMessage: string): void {
         if (!this.ctx) return;
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.textAlign = 'center';

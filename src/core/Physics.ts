@@ -1,26 +1,59 @@
 import { Vector2 } from './Vector2';
 import { PHYSICS_CONSTANTS } from './Constants';
 
+/** 重力ベクトル（下向き） */
 export const GRAVITY = new Vector2(0, PHYSICS_CONSTANTS.GRAVITY_Y); // Gravity force
+/** エンジンの推力 */
 export const THRUST_POWER = 0.15; // Engine thrust power
+/** 回転速度（ラジアン/フレーム） */
 export const ROTATION_SPEED = 0.05; // Radians per frame
+/** 推力使用時の燃料消費量 */
 export const FUEL_CONSUMPTION_THRUST = 1.0;
+/** 回転時の燃料消費量 */
 export const FUEL_CONSUMPTION_ROTATE = 0.2;
 
+/**
+ * 物理演算を提供する静的クラス。
+ * 
+ * 重力、推力、線分交差判定などの物理計算を行います。
+ */
 export class Physics {
+    /**
+     * 速度ベクトルに重力を適用します。
+     * 
+     * @param velocity - 現在の速度ベクトル
+     * @param timeScale - 時間スケール（通常は1）
+     * @returns 重力適用後の新しい速度ベクトル
+     */
     static applyGravity(velocity: Vector2, timeScale: number): Vector2 {
         return velocity.add(GRAVITY.multiply(timeScale));
     }
 
+    /**
+     * 速度ベクトルに推力を適用します。
+     * 
+     * @param velocity - 現在の速度ベクトル
+     * @param angle - 推力の方向（ラジアン）
+     * @param timeScale - 時間スケール（通常は1）
+     * @returns 推力適用後の新しい速度ベクトル
+     */
     static applyThrust(velocity: Vector2, angle: number, timeScale: number): Vector2 {
-        // Angle 0 is pointing UP in our game (usually -PI/2 in standard math, but let's define 0 as UP for simplicity or handle it)
-        // Let's stick to standard math: 0 is Right, -PI/2 is Up.
-        // So if the lander is pointing Up (-PI/2), thrust vector should be (0, -1).
-        const thrustDir = new Vector2(Math.cos(angle), Math.sin(angle));
-        return velocity.add(thrustDir.multiply(THRUST_POWER * timeScale));
+        const thrust = new Vector2(Math.cos(angle), Math.sin(angle)).multiply(THRUST_POWER * timeScale);
+        return velocity.add(thrust);
     }
 
-    // Returns intersection point or null
+    /**
+     * 2つの線分の交差判定を行います。
+     * 
+     * 線分p1-p2と線分p3-p4が交差する場合、交点の座標を返します。
+     * 交差しない場合はnullを返します。
+     * 
+     * @param p1 - 線分1の始点
+     * @param p2 - 線分1の終点
+     * @param p3 - 線分2の始点
+     * @param p4 - 線分2の終点
+     * @returns 交点の座標、または交差しない場合はnull
+     */
     static checkLineIntersection(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2): Vector2 | null {
         const x1 = p1.x, y1 = p1.y;
         const x2 = p2.x, y2 = p2.y;
