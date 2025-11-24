@@ -1,5 +1,6 @@
 import { Vector2 } from '../core/Vector2';
 import { TERRAIN_CONSTANTS } from '../core/Constants';
+import { Debug } from '../core/Debug';
 
 export interface LandingPad {
     startIndex: number;
@@ -61,7 +62,7 @@ export class Terrain {
         }
 
         if (padLocations.length < numPads) {
-            console.warn(`Could only place ${padLocations.length} out of ${numPads} landing pads`);
+            Debug.log(`Could only place ${padLocations.length} out of ${numPads} landing pads`);
         }
 
         padLocations.sort((a, b) => a - b);
