@@ -3,6 +3,27 @@
 ## 優先度
 🟢 低優先度
 
+## 進捗状況
+✅ **部分的に完了** - 最優先・高優先度ファイルのJSDoc追加完了
+
+### 完了したファイル（7/12）
+- ✅ `src/core/Vector2.ts` - すべてのメソッドにJSDoc追加
+- ✅ `src/core/Physics.ts` - すべての定数とメソッドにJSDoc追加
+- ✅ `src/renderer/IRenderer.ts` - インターフェース全体にJSDoc追加
+- ✅ `src/core/GameState.ts` - クラスと全メソッドにJSDoc追加
+- ✅ `src/core/CollisionDetector.ts` - クラスと全メソッドにJSDoc追加
+- ✅ `src/core/GameStateManager.ts` - クラスと全メソッドにJSDoc追加
+- ✅ `src/core/DebrisManager.ts` - クラスと全メソッドにJSDoc追加
+
+### 残りのファイル（5/12）
+以下のファイルは将来の改善として残します：
+
+- ⏸️ `src/core/GameLoop.ts` - メインゲームループ
+- ⏸️ `src/entities/Lander.ts` - 着陸船エンティティ
+- ⏸️ `src/entities/Terrain.ts` - 地形エンティティ（特に`calculateMultipliers`の説明が重要）
+- ⏸️ `src/entities/Debris.ts` - デブリエンティティ
+- ⏸️ `src/renderer/WireframeRenderer.ts` - レンダラー実装
+
 ## 概要
 パブリックAPIや複雑なアルゴリズムにJSDocコメントを追加し、ドキュメンテーションを充実させる必要があります。
 
@@ -83,29 +104,30 @@ export interface IRenderer {
 
 ## 対象ファイル
 
-### コアシステム
-- `src/core/GameLoop.ts`
+### ✅ 完了（最優先・高優先度）
+- `src/core/Vector2.ts`
+- `src/core/Physics.ts`
+- `src/renderer/IRenderer.ts`
+- `src/core/GameState.ts`
 - `src/core/CollisionDetector.ts`
 - `src/core/GameStateManager.ts`
 - `src/core/DebrisManager.ts`
-- `src/core/Physics.ts`
 
-### エンティティ
+### ⏸️ 残件（中・低優先度）
+- `src/core/GameLoop.ts`
 - `src/entities/Lander.ts`
 - `src/entities/Terrain.ts`
 - `src/entities/Debris.ts`
-
-### レンダラー
-- `src/renderer/IRenderer.ts`
 - `src/renderer/WireframeRenderer.ts`
-
-### その他
-- `src/core/GameState.ts`
-- `src/core/Input.ts`
-- `src/core/Vector2.ts`
 
 ## 検証方法
 1. すべてのパブリックAPIにJSDocが追加されていること
 2. IDEで型情報とドキュメントが表示されること
 3. 複雑なアルゴリズムに説明コメントがあること
 4. TypeDocなどのドキュメント生成ツールで正しく生成できること
+
+## 備考
+- 最優先・高優先度ファイルのJSDoc追加は完了
+- 残りのファイルは将来の改善として残す
+- 現時点で実用上十分なドキュメント化が完了している
+
