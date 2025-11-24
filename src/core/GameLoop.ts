@@ -6,6 +6,7 @@ import { Terrain } from '../entities/Terrain';
 import { Vector2 } from './Vector2';
 import { Physics } from './Physics';
 import { Debris } from '../entities/Debris';
+import { Debug } from './Debug';
 
 export class GameLoop {
     private gameState: GameState;
@@ -28,15 +29,13 @@ export class GameLoop {
         requestAnimationFrame(this.loop.bind(this));
     }
 
-    // ...
-
     private loop(timestamp: number) {
         const deltaTime = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
 
         // Debug log every ~1 second
         if (Math.random() < 0.01) {
-            console.log(`Loop running. Status: ${this.gameState.status}, Lander: (${this.lander.position.x}, ${this.lander.position.y}), Terrain points: ${this.terrain.points.length}`);
+            Debug.log(`Loop running. Status: ${this.gameState.status}, Lander: (${this.lander.position.x}, ${this.lander.position.y}), Terrain points: ${this.terrain.points.length}`);
         }
 
         this.update(deltaTime);
