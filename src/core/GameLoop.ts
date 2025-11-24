@@ -119,16 +119,19 @@ export class GameLoop {
         const leftFoot = transform(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y);
         const rightFoot = transform(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y);
 
-        // Check intersection of movement vector for feet? 
-        // Or just check if feet are "below" the terrain segment?
-        // Since we have overhangs, "below" is ambiguous. We must check line intersection.
-        // We check if the line segment from "previous position" to "current position" intersects any terrain segment.
-        // But we only have current position. We should store previous position in Lander or estimate it.
-        // Let's estimate prev position = current - velocity.
+        // Calculate previous frame positions using actual stored values
+        const prevCos = Math.cos(this.lander.previousRotation + Math.PI / 2);
+        const prevSin = Math.sin(this.lander.previousRotation + Math.PI / 2);
 
-        const prevPos = this.lander.position.sub(this.lander.velocity);
-        const prevLeftFoot = new Vector2(prevPos.x + (LANDER_CONSTANTS.FOOT_LEFT_X * cos - LANDER_CONSTANTS.FOOT_LEFT_Y * sin), prevPos.y + (LANDER_CONSTANTS.FOOT_LEFT_X * sin + LANDER_CONSTANTS.FOOT_LEFT_Y * cos));
-        const prevRightFoot = new Vector2(prevPos.x + (LANDER_CONSTANTS.FOOT_RIGHT_X * cos - LANDER_CONSTANTS.FOOT_RIGHT_Y * sin), prevPos.y + (LANDER_CONSTANTS.FOOT_RIGHT_X * sin + LANDER_CONSTANTS.FOOT_RIGHT_Y * cos));
+        const transformPrev = (x: number, y: number) => {
+            return new Vector2(
+                this.lander.previousPosition.x + x * prevCos - y * prevSin,
+                this.lander.previousPosition.y + x * prevSin + y * prevCos
+            );
+        };
+
+        const prevLeftFoot = transformPrev(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y);
+        const prevRightFoot = transformPrev(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y);
 
         // Check all terrain segments
         for (let i = 0; i < this.terrain.points.length - 1; i++) {
@@ -150,12 +153,8 @@ export class GameLoop {
             }
 
             // Check Body Center (Crash)
-            // If center crosses line? Or just if center is "inside" terrain?
-            // Simple check: if center was above and is now below?
-            // Or check line intersection for center too.
-            // Center is (0,0) local.
             const center = this.lander.position;
-            const prevCenter = prevPos;
+            const prevCenter = this.lander.previousPosition;
             intersection = Physics.checkLineIntersection(prevCenter, center, p1, p2);
             if (intersection) {
                 this.crash();
