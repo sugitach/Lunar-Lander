@@ -1,6 +1,7 @@
 import type { IRenderer } from './IRenderer';
 import { Vector2 } from '../core/Vector2';
 import { GameState } from '../core/GameState';
+import { Debug } from '../core/Debug';
 
 export class WireframeRenderer implements IRenderer {
     private canvas: HTMLCanvasElement | null = null;
@@ -34,7 +35,7 @@ export class WireframeRenderer implements IRenderer {
 
     drawLander(position: Vector2, rotation: number, isThrusting: boolean, isCrashed: boolean, isSafe: boolean): void {
         if (!this.ctx) {
-            console.error("drawLander: No context!");
+            Debug.error("drawLander: No context!");
             return;
         }
 
