@@ -12,9 +12,17 @@ export class WireframeRenderer implements IRenderer {
 
     initialize(container: HTMLElement): void {
         this.canvas = document.createElement('canvas');
+        if (!this.canvas) {
+            throw new Error('Failed to create canvas element');
+        }
+
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
+
         this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+            throw new Error('Failed to get 2D rendering context');
+        }
 
         this.resize();
         window.addEventListener('resize', this.resizeBound);
