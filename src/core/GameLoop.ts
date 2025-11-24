@@ -17,6 +17,7 @@ export class GameLoop {
     private terrain: Terrain;
     private lastTime: number = 0;
     private debris: Debris[] = [];
+    private boundLoop: (timestamp: number) => void;
 
     constructor(renderer: IRenderer) {
         this.renderer = renderer;
@@ -26,8 +27,10 @@ export class GameLoop {
         this.terrain = new Terrain(window.innerWidth, window.innerHeight);
         this.lander = new Lander(window.innerWidth / 2, 100); // Initial position
 
+        // Bind loop once for performance
+        this.boundLoop = this.loop.bind(this);
         // Start loop
-        requestAnimationFrame(this.loop.bind(this));
+        requestAnimationFrame(this.boundLoop);
     }
 
     private loop(timestamp: number) {
@@ -42,7 +45,7 @@ export class GameLoop {
         this.update(deltaTime);
         this.render();
 
-        requestAnimationFrame(this.loop.bind(this));
+        requestAnimationFrame(this.boundLoop);
     }
 
     private update(_deltaTime: number) {
@@ -72,17 +75,19 @@ export class GameLoop {
     }
 
     private updateDebris() {
-        this.debris.forEach(d => {
+        // Reverse loop to safely remove elements while iterating
+        for (let i = this.debris.length - 1; i >= 0; i--) {
+            const d = this.debris[i];
             d.update();
-            // Check collision with terrain
+
             if (d.active) {
-                // Simple check: is below terrain?
+                // Check collision with terrain
                 // Find segment
                 // Optimization: assume x is sorted
                 // Just linear search for now, debris count is low
-                for (let i = 0; i < this.terrain.points.length - 1; i++) {
-                    const p1 = this.terrain.points[i];
-                    const p2 = this.terrain.points[i + 1];
+                for (let j = 0; j < this.terrain.points.length - 1; j++) {
+                    const p1 = this.terrain.points[j];
+                    const p2 = this.terrain.points[j + 1];
                     if (d.position.x >= p1.x && d.position.x <= p2.x) {
                         // Interpolate Y
                         const t = (d.position.x - p1.x) / (p2.x - p1.x);
@@ -94,8 +99,12 @@ export class GameLoop {
                     }
                 }
             }
-        });
-        this.debris = this.debris.filter(d => d.active);
+
+            // Remove inactive debris
+            if (!d.active) {
+                this.debris.splice(i, 1);
+            }
+        }
     }
 
     private checkCollisions() {
