@@ -8,16 +8,24 @@ export class Lander {
     public position: Vector2;
     public velocity: Vector2;
     public rotation: number; // Radians. -PI/2 is UP.
+    public previousPosition: Vector2; // For accurate collision detection
+    public previousRotation: number;
     public width: number = 20;
     public height: number = 20;
 
     constructor(startX: number, startY: number) {
         this.position = new Vector2(startX, startY);
+        this.previousPosition = new Vector2(startX, startY);
         this.velocity = new Vector2(0, 0);
         this.rotation = -Math.PI / 2; // Pointing UP
+        this.previousRotation = -Math.PI / 2;
     }
 
     update(input: Input, gameState: GameState, deltaTime: number) {
+        // Save previous state for collision detection
+        this.previousPosition = this.position.clone();
+        this.previousRotation = this.rotation;
+
         // Scale factors for frame-rate independence
         // Assuming original values were tuned for TARGET_FPS
         const timeScale = deltaTime * LANDER_CONSTANTS.TARGET_FPS;
