@@ -23,5 +23,5 @@ export const TERRAIN_CONSTANTS = {
 
 // Physics constants
 export const PHYSICS_CONSTANTS = {
-    DEBRIS_GRAVITY: 0.05
+    GRAVITY_Y: 0.05  // Unified gravity constant
 } as const;

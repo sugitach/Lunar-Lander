@@ -1,6 +1,7 @@
 import { Vector2 } from './Vector2';
+import { PHYSICS_CONSTANTS } from './Constants';
 
-export const GRAVITY = new Vector2(0, 0.05); // Gravity force
+export const GRAVITY = new Vector2(0, PHYSICS_CONSTANTS.GRAVITY_Y); // Gravity force
 export const THRUST_POWER = 0.15; // Engine thrust power
 export const ROTATION_SPEED = 0.05; // Radians per frame
 export const FUEL_CONSUMPTION_THRUST = 1.0;

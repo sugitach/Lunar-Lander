@@ -1,6 +1,7 @@
 import { Vector2 } from '../core/Vector2';
 import { TERRAIN_CONSTANTS } from '../core/Constants';
 import { Debug } from '../core/Debug';
+import { Physics } from '../core/Physics';
 
 export interface LandingPad {
     startIndex: number;
@@ -257,31 +258,13 @@ export class Terrain {
         // Or check all. Performance is fine for generation (once per game).
         // Don't check the immediate previous segment (it shares a point).
 
-        // Import Physics for checkLineIntersection? Or duplicate logic?
-        // Let's duplicate simple check or assume Physics is available if imported.
-        // We didn't import Physics in Terrain.ts. Let's add helper here.
-
         for (let i = 0; i < this.points.length - 2; i++) {
             const s1 = this.points[i];
             const s2 = this.points[i + 1];
-            if (this.checkIntersection(p1, p2, s1, s2)) return true;
+            if (Physics.checkLineIntersection(p1, p2, s1, s2)) return true;
         }
         return false;
     }
 
-    private checkIntersection(p1: Vector2, p2: Vector2, p3: Vector2, p4: Vector2): boolean {
-        const x1 = p1.x, y1 = p1.y;
-        const x2 = p2.x, y2 = p2.y;
-        const x3 = p3.x, y3 = p3.y;
-        const x4 = p4.x, y4 = p4.y;
 
-        const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
-        if (denom === 0) return false;
-
-        const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
-        const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
-
-        // Strict inequality to allow sharing endpoints
-        return (ua > 0.001 && ua < 0.999 && ub > 0.001 && ub < 0.999);
-    }
 }
