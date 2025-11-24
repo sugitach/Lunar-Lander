@@ -166,8 +166,6 @@ export class Terrain {
     private generateRoughTerrain(startX: number, targetX: number, height: number) {
         let currentX = startX;
         let currentY = this.points[this.points.length - 1].y;
-        const minStep = TERRAIN_CONSTANTS.MIN_STEP;
-        const maxStep = TERRAIN_CONSTANTS.MAX_STEP;
 
         // Safety counter
         let iterations = 0;
@@ -175,81 +173,94 @@ export class Terrain {
             iterations++;
 
             const distToTarget = targetX - currentX;
-            if (distToTarget < minStep) {
+            if (distToTarget < TERRAIN_CONSTANTS.MIN_STEP) {
                 this.points.push(new Vector2(targetX, currentY));
                 break;
             }
 
-            const r = Math.random();
-            let nextPoint: Vector2 | null = null;
-
-            if (r < 0.15) {
-                // Vertical Wall
-                const drop = (Math.random() - 0.5) * 150;
-                const newY = Math.max(height * 0.1, Math.min(height * 0.9, currentY + drop));
-                if (Math.abs(newY - currentY) > 20) {
-                    nextPoint = new Vector2(currentX, newY);
-                }
-            } else if (r < 0.25) {
-                // Overhang
-                const overhangDepth = 20 + Math.random() * 30;
-                const overhangHeight = 30 + Math.random() * 50;
-                const ceilingY = currentY + 10;
-
-                if (ceilingY < height * 0.9 && (currentX - overhangDepth) > startX + 10) {
-                    const backX = currentX - overhangDepth;
-                    const backY = ceilingY + (Math.random() * 20);
-                    const floorY = backY + overhangHeight;
-
-                    if (floorY < height * 0.95) {
-                        // Check intersection for all 3 segments
-                        // Lip -> Ceiling -> Back -> Floor
-                        // We need to verify these don't intersect existing terrain
-                        // Simplified: just check if backX is valid (done) and segments don't cross recent points
-                        // Since we only go back, we might cross previous segments if we are not careful.
-                        // But we checked backX > startX + 10. startX is where we started this chunk.
-                        // So we shouldn't cross previous chunks.
-                        // Within this chunk?
-                        // We just need to ensure we don't cross the line we just made?
-                        // Overhangs are tricky. Let's trust the backX check for now but add a generic intersection check before pushing.
-
-                        const p1 = new Vector2(currentX, ceilingY);
-                        const p2 = new Vector2(backX, backY);
-                        const p3 = new Vector2(backX, floorY);
-
-                        if (!this.intersectsAny(this.points[this.points.length - 1], p1) &&
-                            !this.intersectsAny(p1, p2) &&
-                            !this.intersectsAny(p2, p3)) {
-
-                            this.points.push(p1);
-                            this.points.push(p2);
-                            this.points.push(p3);
-
-                            currentX = backX;
-                            currentY = floorY;
-                            continue; // Skip normal push
-                        }
-                    }
-                }
-            }
-
-            if (!nextPoint) {
-                // Normal Terrain
-                const step = minStep + Math.random() * (maxStep - minStep);
-                let nextX = currentX + step;
-                let nextY = currentY + (Math.random() - 0.5) * 60;
-                nextY = Math.max(height * 0.1, Math.min(height * 0.9, nextY));
-                if (nextX > targetX) nextX = targetX;
-                nextPoint = new Vector2(nextX, nextY);
-            }
-
-            // Check intersection before adding
-            if (nextPoint && !this.intersectsAny(this.points[this.points.length - 1], nextPoint)) {
-                this.points.push(nextPoint);
+            const nextPoint = this.generateNextTerrainPoint(currentX, currentY, height, startX);
+            if (nextPoint) {
                 currentX = nextPoint.x;
                 currentY = nextPoint.y;
             }
         }
+    }
+
+    private generateNextTerrainPoint(currentX: number, currentY: number, height: number, startX: number): Vector2 | null {
+        const r = Math.random();
+
+        if (r < 0.15) {
+            return this.tryGenerateVerticalWall(currentX, currentY, height);
+        } else if (r < 0.25) {
+            return this.tryGenerateOverhang(currentX, currentY, height, startX);
+        } else {
+            return this.generateNormalTerrain(currentX, currentY, height);
+        }
+    }
+
+    private tryGenerateVerticalWall(currentX: number, currentY: number, height: number): Vector2 | null {
+        const drop = (Math.random() - 0.5) * 150;
+        const newY = Math.max(height * 0.1, Math.min(height * 0.9, currentY + drop));
+
+        if (Math.abs(newY - currentY) > 20) {
+            const nextPoint = new Vector2(currentX, newY);
+            if (!this.intersectsAny(this.points[this.points.length - 1], nextPoint)) {
+                this.points.push(nextPoint);
+                return nextPoint;
+            }
+        }
+
+        return null;
+    }
+
+    private tryGenerateOverhang(currentX: number, currentY: number, height: number, startX: number): Vector2 | null {
+        const overhangDepth = 20 + Math.random() * 30;
+        const overhangHeight = 30 + Math.random() * 50;
+        const ceilingY = currentY + 10;
+
+        if (ceilingY < height * 0.9 && (currentX - overhangDepth) > startX + 10) {
+            const backX = currentX - overhangDepth;
+            const backY = ceilingY + (Math.random() * 20);
+            const floorY = backY + overhangHeight;
+
+            if (floorY < height * 0.95) {
+                const p1 = new Vector2(currentX, ceilingY);
+                const p2 = new Vector2(backX, backY);
+                const p3 = new Vector2(backX, floorY);
+
+                if (!this.intersectsAny(this.points[this.points.length - 1], p1) &&
+                    !this.intersectsAny(p1, p2) &&
+                    !this.intersectsAny(p2, p3)) {
+
+                    this.points.push(p1);
+                    this.points.push(p2);
+                    this.points.push(p3);
+
+                    return p3; // Return the floor point as the new current position
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private generateNormalTerrain(currentX: number, currentY: number, height: number): Vector2 | null {
+        const minStep = TERRAIN_CONSTANTS.MIN_STEP;
+        const maxStep = TERRAIN_CONSTANTS.MAX_STEP;
+
+        const step = minStep + Math.random() * (maxStep - minStep);
+        const nextX = currentX + step;
+        let nextY = currentY + (Math.random() - 0.5) * 60;
+        nextY = Math.max(height * 0.1, Math.min(height * 0.9, nextY));
+
+        const nextPoint = new Vector2(nextX, nextY);
+
+        if (!this.intersectsAny(this.points[this.points.length - 1], nextPoint)) {
+            this.points.push(nextPoint);
+            return nextPoint;
+        }
+
+        return null;
     }
 
     private intersectsAny(p1: Vector2, p2: Vector2): boolean {
