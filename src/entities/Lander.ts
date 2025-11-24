@@ -2,6 +2,7 @@ import { Vector2 } from '../core/Vector2';
 import { Physics, ROTATION_SPEED, FUEL_CONSUMPTION_THRUST, FUEL_CONSUMPTION_ROTATE } from '../core/Physics';
 import { Input } from '../core/Input';
 import { GameState } from '../core/GameState';
+import { LANDER_CONSTANTS } from '../core/Constants';
 
 export class Lander {
     public position: Vector2;
@@ -18,8 +19,8 @@ export class Lander {
 
     update(input: Input, gameState: GameState, deltaTime: number) {
         // Scale factors for frame-rate independence
-        // Assuming original values were tuned for ~60FPS (16ms)
-        const timeScale = deltaTime * 60;
+        // Assuming original values were tuned for TARGET_FPS
+        const timeScale = deltaTime * LANDER_CONSTANTS.TARGET_FPS;
 
         if (gameState.isFuelEmpty()) {
             // Just gravity if no fuel

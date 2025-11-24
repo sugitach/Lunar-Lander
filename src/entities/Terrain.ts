@@ -1,4 +1,5 @@
 import { Vector2 } from '../core/Vector2';
+import { TERRAIN_CONSTANTS } from '../core/Constants';
 
 export interface LandingPad {
     startIndex: number;
@@ -26,9 +27,9 @@ export class Terrain {
         this.points.push(currentPos.clone());
 
         // Define Pad Locations
-        // Avoid center (width/2) +/- 150px
+        // Avoid center (width/2) +/- EXCLUSION_ZONE
         const center = width / 2;
-        const exclusionZone = 150;
+        const exclusionZone = TERRAIN_CONSTANTS.EXCLUSION_ZONE;
 
         // We want pads distributed but not in center.
         // Let's pick random X ranges.
@@ -41,7 +42,7 @@ export class Terrain {
         ];
 
         const padLocations: number[] = [];
-        const MAX_RETRIES = 100;
+        const MAX_RETRIES = TERRAIN_CONSTANTS.MAX_PLACEMENT_RETRIES;
         let retries = 0;
 
         for (let i = 0; i < numPads && retries < MAX_RETRIES; i++) {
@@ -49,7 +50,7 @@ export class Terrain {
             const padX = range.min + Math.random() * (range.max - range.min);
 
             // Check if too close to existing pads
-            const tooClose = padLocations.some(p => Math.abs(p - padX) < 100);
+            const tooClose = padLocations.some(p => Math.abs(p - padX) < TERRAIN_CONSTANTS.MIN_PAD_DISTANCE);
             if (!tooClose) {
                 padLocations.push(padX);
             } else {
@@ -68,7 +69,7 @@ export class Terrain {
         let lastX = 0;
 
         for (const padCenterX of padLocations) {
-            const padWidth = 40 + Math.random() * 60; // 40-100
+            const padWidth = TERRAIN_CONSTANTS.MIN_PAD_WIDTH + Math.random() * TERRAIN_CONSTANTS.MAX_PAD_WIDTH_RANGE;
             const padStartX = padCenterX - padWidth / 2;
 
             // Fill from lastX to padStartX
@@ -163,8 +164,8 @@ export class Terrain {
     private generateRoughTerrain(startX: number, targetX: number, height: number) {
         let currentX = startX;
         let currentY = this.points[this.points.length - 1].y;
-        const minStep = 15;
-        const maxStep = 40;
+        const minStep = TERRAIN_CONSTANTS.MIN_STEP;
+        const maxStep = TERRAIN_CONSTANTS.MAX_STEP;
 
         // Safety counter
         let iterations = 0;

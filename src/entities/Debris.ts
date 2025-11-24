@@ -1,4 +1,5 @@
 import { Vector2 } from '../core/Vector2';
+import { PHYSICS_CONSTANTS } from '../core/Constants';
 
 export class Debris {
     public position: Vector2;
@@ -20,7 +21,7 @@ export class Debris {
         if (!this.active) return;
 
         // Gravity
-        this.velocity.y += 0.05; // Simple gravity
+        this.velocity.y += PHYSICS_CONSTANTS.DEBRIS_GRAVITY;
 
         this.position = this.position.add(this.velocity);
         this.rotation += this.rotationSpeed;

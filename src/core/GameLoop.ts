@@ -7,6 +7,7 @@ import { Vector2 } from './Vector2';
 import { Physics } from './Physics';
 import { Debris } from '../entities/Debris';
 import { Debug } from './Debug';
+import { LANDER_CONSTANTS } from './Constants';
 
 export class GameLoop {
     private gameState: GameState;
@@ -114,9 +115,9 @@ export class GameLoop {
             );
         };
 
-        // Feet are at roughly (-15, 20) and (15, 20) in local space (from WireframeRenderer)
-        const leftFoot = transform(-15, 20);
-        const rightFoot = transform(15, 20);
+        // Feet coordinates from LANDER_CONSTANTS
+        const leftFoot = transform(LANDER_CONSTANTS.FOOT_LEFT_X, LANDER_CONSTANTS.FOOT_LEFT_Y);
+        const rightFoot = transform(LANDER_CONSTANTS.FOOT_RIGHT_X, LANDER_CONSTANTS.FOOT_RIGHT_Y);
 
         // Check intersection of movement vector for feet? 
         // Or just check if feet are "below" the terrain segment?
@@ -126,8 +127,8 @@ export class GameLoop {
         // Let's estimate prev position = current - velocity.
 
         const prevPos = this.lander.position.sub(this.lander.velocity);
-        const prevLeftFoot = new Vector2(prevPos.x + (-15 * cos - 20 * sin), prevPos.y + (-15 * sin + 20 * cos)); // Approximate rotation didn't change much
-        const prevRightFoot = new Vector2(prevPos.x + (15 * cos - 20 * sin), prevPos.y + (15 * sin + 20 * cos));
+        const prevLeftFoot = new Vector2(prevPos.x + (LANDER_CONSTANTS.FOOT_LEFT_X * cos - LANDER_CONSTANTS.FOOT_LEFT_Y * sin), prevPos.y + (LANDER_CONSTANTS.FOOT_LEFT_X * sin + LANDER_CONSTANTS.FOOT_LEFT_Y * cos));
+        const prevRightFoot = new Vector2(prevPos.x + (LANDER_CONSTANTS.FOOT_RIGHT_X * cos - LANDER_CONSTANTS.FOOT_RIGHT_Y * sin), prevPos.y + (LANDER_CONSTANTS.FOOT_RIGHT_X * sin + LANDER_CONSTANTS.FOOT_RIGHT_Y * cos));
 
         // Check all terrain segments
         for (let i = 0; i < this.terrain.points.length - 1; i++) {
@@ -186,7 +187,7 @@ export class GameLoop {
 
             // Snap to pad
             const padY = this.terrain.points[segmentIndex].y;
-            this.lander.position.y = padY - 20;
+            this.lander.position.y = padY - LANDER_CONSTANTS.BODY_HEIGHT;
             this.lander.velocity = new Vector2(0, 0);
             this.lander.rotation = -Math.PI / 2;
 
