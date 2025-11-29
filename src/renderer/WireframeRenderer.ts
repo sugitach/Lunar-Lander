@@ -2,6 +2,7 @@ import type { IRenderer } from './IRenderer';
 import { Vector2 } from '../core/Vector2';
 import { GameState } from '../core/GameState';
 import { Debug } from '../core/Debug';
+import { pixelsToMeters } from '../core/Constants';
 
 /**
  * ワイヤーフレーム描画を行うレンダラークラス。
@@ -264,11 +265,11 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.fillText(`FUEL:  ${Math.floor(state.fuel)}`, 20, 70);
 
         // Velocity display
-        const vX = velocity.x.toFixed(2);
-        const vY = velocity.y.toFixed(2);
-        this.ctx.fillText(`H.SPEED: ${vX}`, this.width - 200, 30);
-        this.ctx.fillText(`V.SPEED: ${vY}`, this.width - 200, 50);
-        this.ctx.fillText(`ALTITUDE: ${Math.floor(altitude)}`, this.width - 200, 70);
+        const vX = pixelsToMeters(velocity.x).toFixed(1);
+        const vY = pixelsToMeters(velocity.y).toFixed(1);
+        this.ctx.fillText(`H.SPEED: ${vX} m/s`, this.width - 220, 30);
+        this.ctx.fillText(`V.SPEED: ${vY} m/s`, this.width - 220, 50);
+        this.ctx.fillText(`ALTITUDE: ${Math.floor(pixelsToMeters(altitude))} m`, this.width - 220, 70);
     }
 
     /**

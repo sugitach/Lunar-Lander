@@ -25,3 +25,28 @@ export const TERRAIN_CONSTANTS = {
 export const PHYSICS_CONSTANTS = {
     GRAVITY_Y: 0.05  // Unified gravity constant
 } as const;
+
+// Distance unit conversion constants
+export const DISTANCE_CONSTANTS = {
+    PIXELS_PER_METER: 10  // 1 meter = 10 pixels in game space
+} as const;
+
+/**
+ * ピクセルをメートルに変換します。
+ * 
+ * @param pixels - ピクセル値
+ * @returns メートル値
+ */
+export function pixelsToMeters(pixels: number): number {
+    return pixels / DISTANCE_CONSTANTS.PIXELS_PER_METER;
+}
+
+/**
+ * メートルをピクセルに変換します。
+ * 
+ * @param meters - メートル値
+ * @returns ピクセル値
+ */
+export function metersToPixels(meters: number): number {
+    return meters * DISTANCE_CONSTANTS.PIXELS_PER_METER;
+}
