@@ -17,6 +17,9 @@ export interface IInputSource {
     /** 再スタートキーが押されているか */
     readonly isRestarting: boolean;
 
+    /** ESCキーが押されているか */
+    readonly isEscaping: boolean;
+
     /**
      * 入力ソースのリソースを解放します。
      */

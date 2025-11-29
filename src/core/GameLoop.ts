@@ -8,6 +8,7 @@ import { CollisionDetector } from './CollisionDetector';
 import { GameStateManager } from './GameStateManager';
 import { DebrisManager } from './DebrisManager';
 import type { ViewportSize } from './ViewportSize';
+import { SCORE_SCREEN_CONSTANTS } from './Constants';
 
 /**
  * ゲームのメインループを管理するクラス。
@@ -32,6 +33,10 @@ export class GameLoop {
     private gameStateManager: GameStateManager;
     private debrisManager: DebrisManager;
 
+    // Score screen state
+    private scoreScreenStartTime: number = 0;
+    private previousPosition: { x: number, y: number } | null = null;
+
     /**
      * GameLoopのインスタンスを生成します。
      * 
@@ -53,6 +58,9 @@ export class GameLoop {
         this.gameStateManager = new GameStateManager();
         this.gameStateManager.initialize(this.gameState);
         this.debrisManager = new DebrisManager();
+
+        // Initialize game start time
+        this.gameState.gameStartTime = Date.now();
 
         // Bind loop once for performance
         this.boundLoop = this.loop.bind(this);
@@ -120,12 +128,56 @@ export class GameLoop {
         }
 
         if (this.gameState.status === GameStatus.PLAYING) {
+            // Track statistics
+            this.gameState.playTime = (Date.now() - this.gameState.gameStartTime) / 1000;
+
+            // Track distance
+            if (this.previousPosition) {
+                const dx = this.lander.position.x - this.previousPosition.x;
+                const dy = this.lander.position.y - this.previousPosition.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                this.gameState.totalDistance += distance;
+            }
+            this.previousPosition = { x: this.lander.position.x, y: this.lander.position.y };
+
+            // Track max speed
+            const speed = Math.sqrt(
+                this.lander.velocity.x * this.lander.velocity.x +
+                this.lander.velocity.y * this.lander.velocity.y
+            );
+            if (speed > this.gameState.maxSpeed) {
+                this.gameState.maxSpeed = speed;
+            }
+
             // Input handling
             // Lander handles its own physics updates based on input
             this.lander.update(this.input, this.gameState, _deltaTime);
 
+            // Track fuel used
+            this.gameState.fuelUsed = 500 - this.gameState.fuel;
+
             // Collision Detection
             this.checkCollisions();
+        } else if (this.gameState.status === GameStatus.CRASHED || this.gameState.status === GameStatus.LANDED) {
+            // Score screen logic
+            if (this.scoreScreenStartTime === 0) {
+                this.scoreScreenStartTime = Date.now();
+            }
+
+            const elapsed = Date.now() - this.scoreScreenStartTime;
+            const canContinue = elapsed >= SCORE_SCREEN_CONSTANTS.WAIT_TIME;
+
+            // Check for restart input
+            if (canContinue && this.input.isRestarting) {
+                this.resetGame();
+                return;
+            }
+
+            // Check for ESC key skip (before 5 seconds)
+            if (!canContinue && this.input.isEscaping) {
+                this.resetGame();
+                return;
+            }
         }
 
         // Update Debris (always, even after crash)
@@ -205,10 +257,11 @@ export class GameLoop {
 
         this.renderer.drawUI(this.gameState, this.lander.velocity, this.viewport.height - this.lander.position.y);
 
-        if (this.gameState.status === GameStatus.LANDED) {
-            this.renderer.drawMessage("LANDED", `Score: ${this.gameState.score} (Press Space)`);
-        } else if (this.gameState.status === GameStatus.CRASHED) {
-            this.renderer.drawMessage("CRASHED", "Press Space to Restart");
+        // Display score screen for LANDED or CRASHED states
+        if (this.gameState.status === GameStatus.LANDED || this.gameState.status === GameStatus.CRASHED) {
+            const elapsed = this.scoreScreenStartTime > 0 ? Date.now() - this.scoreScreenStartTime : 0;
+            const canContinue = elapsed >= SCORE_SCREEN_CONSTANTS.WAIT_TIME;
+            this.renderer.drawScoreScreen(this.gameState, canContinue);
         }
     }
 
@@ -218,9 +271,14 @@ export class GameLoop {
     private resetGame(): void {
         this.gameState = new GameState();
         this.gameState.status = GameStatus.PLAYING;
+        this.gameState.gameStartTime = Date.now();
         this.terrain = new Terrain(this.viewport.width, this.viewport.height);
         this.lander = new Lander(this.viewport.width / 2, 100);
         this.debrisManager.clear();
         this.gameStateManager.initialize(this.gameState);
+
+        // Reset score screen state
+        this.scoreScreenStartTime = 0;
+        this.previousPosition = null;
     }
 }

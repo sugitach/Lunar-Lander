@@ -67,6 +67,14 @@ export interface IRenderer {
     drawDebris(debris: Debris[]): void;
 
     /**
+     * スコア画面を描画します。
+     * 
+     * @param state - ゲーム状態
+     * @param canContinue - 5秒経過して続行可能かどうか
+     */
+    drawScoreScreen(state: GameState, canContinue: boolean): void;
+
+    /**
      * レンダラーのリソースを解放します。
      */
     dispose(): void;

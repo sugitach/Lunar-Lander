@@ -50,3 +50,19 @@ export function pixelsToMeters(pixels: number): number {
 export function metersToPixels(meters: number): number {
     return meters * DISTANCE_CONSTANTS.PIXELS_PER_METER;
 }
+
+/**
+ * スコア画面関連の定数。
+ */
+export const SCORE_SCREEN_CONSTANTS = {
+    /** 待機時間（ミリ秒） */
+    WAIT_TIME: 5000,
+    /** ダイアログ幅 */
+    DIALOG_WIDTH: 400,
+    /** ダイアログ高さ */
+    DIALOG_HEIGHT: 300,
+    /** パディング */
+    PADDING: 20,
+    /** 行間 */
+    LINE_HEIGHT: 25
+} as const;

@@ -10,6 +10,7 @@ export class KeyboardInput implements IInputSource {
     private _isRotatingRight = false;
     private _isThrusting = false;
     private _isRestarting = false;
+    private _isEscaping = false;
 
     private handleKeyDownBound = this.handleKeyDown.bind(this);
     private handleKeyUpBound = this.handleKeyUp.bind(this);
@@ -35,6 +36,10 @@ export class KeyboardInput implements IInputSource {
         return this._isRestarting;
     }
 
+    get isEscaping(): boolean {
+        return this._isEscaping;
+    }
+
     private handleKeyDown(e: KeyboardEvent): void {
         switch (e.key) {
             case 'ArrowLeft':
@@ -55,6 +60,9 @@ export class KeyboardInput implements IInputSource {
             case ' ': // Space for thrust and restart
                 this._isThrusting = true;
                 this._isRestarting = true;
+                break;
+            case 'Escape':
+                this._isEscaping = true;
                 break;
         }
     }
@@ -79,6 +87,9 @@ export class KeyboardInput implements IInputSource {
             case ' ': // Space
                 this._isThrusting = false;
                 this._isRestarting = false;
+                break;
+            case 'Escape':
+                this._isEscaping = false;
                 break;
         }
     }
