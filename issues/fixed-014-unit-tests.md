@@ -1,3 +1,5 @@
+status: fixed
+
 # Issue #014: ユニットテストの作成
 
 ## 優先度
@@ -24,12 +26,12 @@ describe('Vector2', () => {
         expect(result.x).toBe(4);
         expect(result.y).toBe(6);
     });
-    
+
     test('length() should calculate magnitude', () => {
         const v = new Vector2(3, 4);
         expect(v.length()).toBe(5);
     });
-    
+
     // その他のメソッドのテスト
 });
 ```
@@ -42,7 +44,7 @@ describe('Physics', () => {
         const result = Physics.applyGravity(velocity, 1);
         expect(result.y).toBeGreaterThan(0);
     });
-    
+
     test('checkLineIntersection() should detect intersection', () => {
         const p1 = new Vector2(0, 0);
         const p2 = new Vector2(10, 10);
@@ -62,19 +64,98 @@ describe('CollisionDetector', () => {
     let detector: CollisionDetector;
     let mockLander: Lander;
     let mockTerrain: Terrain;
-    
+
     beforeEach(() => {
         detector = new CollisionDetector();
         mockLander = createMockLander();
         mockTerrain = createMockTerrain();
     });
-    
+
     test('checkLanderTerrainCollision() should detect foot collision', () => {
         // テストケース
     });
-    
+
     test('checkBoundaries() should wrap X coordinate', () => {
         // テストケース
+    });
+});
+```
+
+### 14.2 エンティティ
+
+#### Lander.ts
+```typescript
+describe('Lander', () => {
+    test('update() should apply gravity', () => {
+        const lander = new Lander(100, 100);
+        const mockInput = new MockInput();
+        const gameState = new GameState();
+
+        const initialY = lander.velocity.y;
+        lander.update(mockInput, gameState, 1);
+
+        expect(lander.velocity.y).toBeGreaterThan(initialY);
+    });
+
+    test('update() should apply thrust when input is active', () => {
+        const lander = new Lander(100, 100);
+        const mockInput = new MockInput();
+        mockInput.isThrusting = true;
+        const gameState = new GameState();
+        gameState.fuel = 100;
+
+        lander.update(mockInput, gameState, 1);
+
+        expect(gameState.fuel).toBeLessThan(100);
+    });
+});
+```
+
+#### Terrain.ts
+```typescript
+describe('Terrain', () => {
+    test('generateTerrain() should create points', () => {
+        const terrain = new Terrain(800, 600);
+        expect(terrain.points.length).toBeGreaterThan(0);
+    });
+
+    test('generateTerrain() should create landing pads', () => {
+        const terrain = new Terrain(800, 600);
+        expect(terrain.pads.length).toBeGreaterThan(0);
+    });
+
+    test('pads should have valid multipliers', () => {
+        const terrain = new Terrain(800, 600);
+        terrain.pads.forEach(pad => {
+            expect(pad.multiplier).toBeGreaterThan(0);
+        });
+    });
+});
+```
+
+### 14.3 ゲーム状態
+
+#### GameState.ts
+```typescript
+describe('GameState', () => {
+    test('consumeFuel() should decrease fuel', () => {
+        const state = new GameState();
+        const initialFuel = state.fuel;
+        state.consumeFuel(10);
+        expect(state.fuel).toBe(initialFuel - 10);
+    });
+
+    test('consumeFuel() should not go below zero', () => {
+        const state = new GameState();
+        state.consumeFuel(1000);
+        expect(state.fuel).toBe(0);
+    });
+
+    test('isFuelEmpty() should return correct value', () => {
+        const state = new GameState();
+        expect(state.isFuelEmpty()).toBe(false);
+        state.consumeFuel(1000);
+        expect(state.isFuelEmpty()).toBe(true);
     });
 });
 ```
@@ -140,85 +221,6 @@ describe('DebrisManager', () => {
         manager.spawn(new Vector2(100, 100), 5);
         manager.clear();
         expect(manager.getAll().length).toBe(0);
-    });
-});
-```
-
-### 14.2 エンティティ
-
-#### Lander.ts
-```typescript
-describe('Lander', () => {
-    test('update() should apply gravity', () => {
-        const lander = new Lander(100, 100);
-        const mockInput = new MockInput();
-        const gameState = new GameState();
-        
-        const initialY = lander.velocity.y;
-        lander.update(mockInput, gameState, 1);
-        
-        expect(lander.velocity.y).toBeGreaterThan(initialY);
-    });
-    
-    test('update() should apply thrust when input is active', () => {
-        const lander = new Lander(100, 100);
-        const mockInput = new MockInput();
-        mockInput.isThrusting = true;
-        const gameState = new GameState();
-        gameState.fuel = 100;
-        
-        lander.update(mockInput, gameState, 1);
-        
-        expect(gameState.fuel).toBeLessThan(100);
-    });
-});
-```
-
-#### Terrain.ts
-```typescript
-describe('Terrain', () => {
-    test('generateTerrain() should create points', () => {
-        const terrain = new Terrain(800, 600);
-        expect(terrain.points.length).toBeGreaterThan(0);
-    });
-    
-    test('generateTerrain() should create landing pads', () => {
-        const terrain = new Terrain(800, 600);
-        expect(terrain.pads.length).toBeGreaterThan(0);
-    });
-    
-    test('pads should have valid multipliers', () => {
-        const terrain = new Terrain(800, 600);
-        terrain.pads.forEach(pad => {
-            expect(pad.multiplier).toBeGreaterThan(0);
-        });
-    });
-});
-```
-
-### 14.3 ゲーム状態
-
-#### GameState.ts
-```typescript
-describe('GameState', () => {
-    test('consumeFuel() should decrease fuel', () => {
-        const state = new GameState();
-        const initialFuel = state.fuel;
-        state.consumeFuel(10);
-        expect(state.fuel).toBe(initialFuel - 10);
-    });
-    
-    test('consumeFuel() should not go below zero', () => {
-        const state = new GameState();
-        state.consumeFuel(1000);
-        expect(state.fuel).toBe(0);
-    });
-    
-    test('isFuelEmpty() should return correct value', () => {
-        const state = new GameState();
-        expect(state.isFuelEmpty()).toBe(false);
-        state.consumeFuel(1000);
-        expect(state.isFuelEmpty()).toBe(true);
     });
 });
 ```
