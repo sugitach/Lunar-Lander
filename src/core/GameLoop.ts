@@ -51,6 +51,7 @@ export class GameLoop {
         // Initialize managers
         this.collisionDetector = new CollisionDetector();
         this.gameStateManager = new GameStateManager();
+        this.gameStateManager.initialize(this.gameState);
         this.debrisManager = new DebrisManager();
 
         // Bind loop once for performance
@@ -220,5 +221,6 @@ export class GameLoop {
         this.terrain = new Terrain(this.viewport.width, this.viewport.height);
         this.lander = new Lander(this.viewport.width / 2, 100);
         this.debrisManager.clear();
+        this.gameStateManager.initialize(this.gameState);
     }
 }

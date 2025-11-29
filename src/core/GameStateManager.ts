@@ -5,12 +5,46 @@ import { Vector2 } from './Vector2';
 import { Debris } from '../entities/Debris';
 import { LANDER_CONSTANTS } from './Constants';
 
+const HIGH_SCORE_KEY = 'moon-lander-high-score';
+
 /**
  * ゲーム状態の管理を担当するクラス。
  * 
  * 着陸判定、クラッシュ処理、安全着陸判定を行います。
  */
 export class GameStateManager {
+    /**
+     * ゲーム状態を初期化します。
+     * 
+     * @param gameState - ゲーム状態
+     */
+    initialize(gameState: GameState): void {
+        gameState.highScore = this.loadHighScore();
+    }
+
+    /**
+     * ハイスコアを読み込みます。
+     */
+    private loadHighScore(): number {
+        try {
+            const stored = localStorage.getItem(HIGH_SCORE_KEY);
+            return stored ? parseInt(stored, 10) : 0;
+        } catch (e) {
+            console.warn('Failed to load high score:', e);
+            return 0;
+        }
+    }
+
+    /**
+     * ハイスコアを保存します。
+     */
+    private saveHighScore(score: number): void {
+        try {
+            localStorage.setItem(HIGH_SCORE_KEY, Math.floor(score).toString());
+        } catch (e) {
+            console.warn('Failed to save high score:', e);
+        }
+    }
     /**
      * 着陸処理を行います。
      * 
@@ -29,6 +63,11 @@ export class GameStateManager {
             // Successful landing!
             gameState.status = GameStatus.LANDED;
             gameState.score += Math.floor((100 + gameState.fuel / 10) * pad.multiplier);
+
+            if (gameState.score > gameState.highScore) {
+                gameState.highScore = gameState.score;
+                this.saveHighScore(gameState.highScore);
+            }
 
             // Snap to pad
             const padY = terrain.points[segmentIndex].y;
@@ -49,6 +88,11 @@ export class GameStateManager {
      */
     handleCrash(lander: Lander, gameState: GameState): Debris[] {
         gameState.status = GameStatus.CRASHED;
+
+        if (gameState.score > gameState.highScore) {
+            gameState.highScore = gameState.score;
+            this.saveHighScore(gameState.highScore);
+        }
 
         // Spawn Debris
         const debris: Debris[] = [];

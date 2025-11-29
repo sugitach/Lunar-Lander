@@ -30,6 +30,9 @@ export class GameState {
     /** 残り燃料 */
     public fuel: number = 500;
 
+    /** ハイスコア */
+    public highScore: number = 0;
+
     /**
      * 燃料を消費します。
      * 

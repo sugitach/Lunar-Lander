@@ -260,7 +260,8 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.font = '16px monospace';
 
         this.ctx.fillText(`SCORE: ${Math.floor(state.score)}`, 20, 30);
-        this.ctx.fillText(`FUEL:  ${Math.floor(state.fuel)}`, 20, 50);
+        this.ctx.fillText(`HIGH:  ${Math.floor(state.highScore)}`, 20, 50);
+        this.ctx.fillText(`FUEL:  ${Math.floor(state.fuel)}`, 20, 70);
 
         // Velocity display
         const vX = velocity.x.toFixed(2);
