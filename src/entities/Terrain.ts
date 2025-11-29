@@ -106,65 +106,6 @@ export class Terrain {
 
         // 3. Generate Terrain Segments
         this.points = [];
-
-        for (let i = 0; i < keyPoints.length - 1; i++) {
-            const p1 = keyPoints[i];
-            const p2 = keyPoints[i + 1];
-
-            // If this segment is a pad, just add the line
-            if (p1.isPadStart && p2.isPadEnd) {
-                // Record pad info
-                // Note: startIndex will be current length of points
-                // We add p1 here. p2 will be added in next iteration or at end.
-                // Wait, we need to be careful about point duplication.
-                // Strategy: Add points for the segment, excluding the last point (unless it's the very last segment)
-
-                // Actually, let's just add p1. p2 is the start of next segment.
-                // But for pad tracking, we need indices.
-
-                const startIndex = this.points.length;
-                this.points.push(p1.pos);
-                this.points.push(p2.pos); // Pad is flat, so just two points
-                const endIndex = this.points.length - 1;
-
-                this.pads.push({
-                    startIndex: startIndex,
-                    endIndex: endIndex,
-                    multiplier: 1 // Calculated later
-                });
-            } else {
-                // Terrain segment - Subdivide
-                // We generate points between p1 and p2 (inclusive of p1 and p2)
-                const segmentPoints = this.subdivide(p1.pos, p2.pos, height);
-
-                // Add points to main array
-                // If this is not the first segment, the first point of segmentPoints (p1) is same as last point of previous segment.
-                // However, in our loop structure:
-                // Iteration 0: p1(Start) -> p2(Pad1Start). Generate points. Add all except last?
-
-                // Let's refine:
-                // We want to add p1. Then add intermediate points.
-                // p2 will be added by the NEXT iteration as its p1.
-                // EXCEPT if p1->p2 is a pad, we added both.
-                // This is getting tricky.
-
-                // Simpler approach:
-                // Always add p1.
-                // If pad: add p2 as well.
-                // If terrain: add intermediate points.
-                // BUT, if we add p2 for pad, next iteration p1 is that p2. We shouldn't add it again.
-
-                // Let's restart the loop logic.
-                // We have a list of segments.
-                // Segment 0: Start -> Pad1Start (Terrain)
-                // Segment 1: Pad1Start -> Pad1End (Pad)
-                // Segment 2: Pad1End -> Pad2Start (Terrain)
-                // ...
-            }
-        }
-
-        // Re-do the loop with cleaner logic
-        this.points = [];
         // Add the very first point
         this.points.push(keyPoints[0].pos);
 
