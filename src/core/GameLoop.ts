@@ -9,6 +9,13 @@ import { GameStateManager } from './GameStateManager';
 import { DebrisManager } from './DebrisManager';
 import type { ViewportSize } from './ViewportSize';
 
+/**
+ * ゲームのメインループを管理するクラス。
+ * 
+ * 各フレームでの更新、衝突判定、レンダリングを制御します。
+ * CollisionDetector、GameStateManager、DebrisManagerを使用して
+ * 責務を分離しています。
+ */
 export class GameLoop {
     private gameState: GameState;
     private input: IInputSource;
@@ -25,6 +32,13 @@ export class GameLoop {
     private gameStateManager: GameStateManager;
     private debrisManager: DebrisManager;
 
+    /**
+     * GameLoopのインスタンスを生成します。
+     * 
+     * @param renderer - 描画を担当するレンダラー
+     * @param input - 入力を担当するソース
+     * @param viewport - ビューポートサイズ
+     */
     constructor(renderer: IRenderer, input: IInputSource, viewport: ViewportSize) {
         this.renderer = renderer;
         this.input = input;
@@ -69,6 +83,12 @@ export class GameLoop {
         this.update(deltaTime);
     }
 
+    /**
+     * メインループ関数。
+     * requestAnimationFrameによって毎フレーム呼び出されます。
+     * 
+     * @param timestamp - 現在のタイムスタンプ
+     */
     private loop(timestamp: number): void {
         if (!this.isRunning) return;
 
@@ -86,6 +106,11 @@ export class GameLoop {
         requestAnimationFrame(this.boundLoop);
     }
 
+    /**
+     * ゲームの状態を更新します。
+     * 
+     * @param _deltaTime - 前フレームからの経過時間（秒）
+     */
     private update(_deltaTime: number) {
         // Restart Check
         if (this.input.isRestarting && (this.gameState.status === GameStatus.CRASHED || this.gameState.status === GameStatus.LANDED)) {
@@ -109,6 +134,11 @@ export class GameLoop {
         // (In a real app, we might use a reactive store, but here we just pass data to renderer)
     }
 
+    /**
+     * 衝突判定を行います。
+     * 
+     * 地形との衝突、画面外への移動などをチェックします。
+     */
     private checkCollisions() {
         const collision = this.collisionDetector.checkLanderTerrainCollision(this.lander, this.terrain);
 
@@ -130,6 +160,11 @@ export class GameLoop {
         }
     }
 
+    /**
+     * 着陸またはクラッシュの判定結果を処理します。
+     * 
+     * @param segmentIndex - 衝突した地形セグメントのインデックス
+     */
     private handleLandingOrCrash(segmentIndex: number) {
         this.gameStateManager.handleLanding(segmentIndex, this.lander, this.terrain, this.gameState);
 
@@ -139,11 +174,17 @@ export class GameLoop {
         }
     }
 
+    /**
+     * クラッシュ時の処理を行います。
+     */
     private crash() {
         const debris = this.gameStateManager.handleCrash(this.lander, this.gameState);
         debris.forEach(d => this.debrisManager.spawn(d.position, 1));
     }
 
+    /**
+     * ゲーム画面を描画します。
+     */
     private render() {
         this.renderer.clear();
         this.renderer.drawTerrain(this.terrain.points, this.terrain.pads);
@@ -170,6 +211,9 @@ export class GameLoop {
         }
     }
 
+    /**
+     * ゲームをリセットして再開します。
+     */
     private resetGame(): void {
         this.gameState = new GameState();
         this.gameState.status = GameStatus.PLAYING;

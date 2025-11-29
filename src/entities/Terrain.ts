@@ -3,20 +3,50 @@ import { TERRAIN_CONSTANTS } from '../core/Constants';
 import { Debug } from '../core/Debug';
 import { Physics } from '../core/Physics';
 
+/**
+ * 着陸パッドの情報を定義するインターフェース。
+ */
 export interface LandingPad {
+    /** パッドの開始点インデックス（points配列内） */
     startIndex: number;
+    /** パッドの終了点インデックス（points配列内） */
     endIndex: number;
+    /** スコア倍率 */
     multiplier: number;
 }
 
+/**
+ * 地形クラス。
+ * 
+ * 地形の生成、管理を行います。
+ * 複数の着陸パッド、起伏のある地形、オーバーハングなどを生成します。
+ */
 export class Terrain {
+    /** 地形を構成する点の配列 */
     public points: Vector2[] = [];
+    /** 着陸パッドのリスト */
     public pads: LandingPad[] = [];
 
+    /**
+     * Terrainのインスタンスを生成し、地形を生成します。
+     * 
+     * @param width - 地形の幅
+     * @param height - 地形の高さ
+     */
     constructor(width: number, height: number) {
         this.generate(width, height);
     }
 
+    /**
+     * 地形を生成します。
+     * 
+     * 1. 着陸パッドの位置をランダムに決定
+     * 2. パッド間をラフな地形で埋める
+     * 3. スコア倍率を計算する
+     * 
+     * @param width - 地形の幅
+     * @param height - 地形の高さ
+     */
     generate(width: number, height: number) {
         this.points = [];
         this.pads = [];
@@ -115,6 +145,15 @@ export class Terrain {
         this.calculateMultipliers();
     }
 
+    /**
+     * 各パッドのスコア倍率を計算します。
+     * 
+     * 計算式: A × (B + 1) × (C + 1) × D
+     * - A: パッド幅による係数 (20 / padWidth)
+     * - B: 左壁の高さ係数 (leftWallHeight / landerHeight)
+     * - C: 右壁の高さ係数 (rightWallHeight / landerHeight)
+     * - D: 天井の有無による係数 (天井あり: 4, なし: 1)
+     */
     private calculateMultipliers() {
         const landerHeight = 20;
 
@@ -163,6 +202,13 @@ export class Terrain {
         });
     }
 
+    /**
+     * 指定された区間をラフな地形で埋めます。
+     * 
+     * @param startX - 開始X座標
+     * @param targetX - 終了X座標
+     * @param height - 地形の高さ制限
+     */
     private generateRoughTerrain(startX: number, targetX: number, height: number) {
         let currentX = startX;
         let currentY = this.points[this.points.length - 1].y;
@@ -186,6 +232,11 @@ export class Terrain {
         }
     }
 
+    /**
+     * 次の地形ポイントを生成します。
+     * 
+     * 確率に基づいて、垂直壁、オーバーハング、または通常の地形を選択します。
+     */
     private generateNextTerrainPoint(currentX: number, currentY: number, height: number, startX: number): Vector2 | null {
         const r = Math.random();
 
@@ -198,6 +249,9 @@ export class Terrain {
         }
     }
 
+    /**
+     * 垂直な壁の生成を試みます。
+     */
     private tryGenerateVerticalWall(currentX: number, currentY: number, height: number): Vector2 | null {
         const drop = (Math.random() - 0.5) * 150;
         const newY = Math.max(height * 0.1, Math.min(height * 0.9, currentY + drop));
@@ -213,6 +267,9 @@ export class Terrain {
         return null;
     }
 
+    /**
+     * オーバーハング（洞窟状の地形）の生成を試みます。
+     */
     private tryGenerateOverhang(currentX: number, currentY: number, height: number, startX: number): Vector2 | null {
         const overhangDepth = 20 + Math.random() * 30;
         const overhangHeight = 30 + Math.random() * 50;
@@ -244,6 +301,9 @@ export class Terrain {
         return null;
     }
 
+    /**
+     * 通常の地形ポイントを生成します。
+     */
     private generateNormalTerrain(currentX: number, currentY: number, height: number): Vector2 | null {
         const minStep = TERRAIN_CONSTANTS.MIN_STEP;
         const maxStep = TERRAIN_CONSTANTS.MAX_STEP;
@@ -263,6 +323,10 @@ export class Terrain {
         return null;
     }
 
+    /**
+     * 線分が既存の地形と交差するか判定します。
+     * 自己交差を防ぐために使用します。
+     */
     private intersectsAny(p1: Vector2, p2: Vector2): boolean {
         // Check against all existing segments
         // Optimization: Only check recent segments? 
@@ -276,6 +340,4 @@ export class Terrain {
         }
         return false;
     }
-
-
 }

@@ -3,6 +3,12 @@ import { Vector2 } from '../core/Vector2';
 import { GameState } from '../core/GameState';
 import { Debug } from '../core/Debug';
 
+/**
+ * ワイヤーフレーム描画を行うレンダラークラス。
+ * 
+ * HTML5 Canvas APIを使用して、ゲームの各要素を線画で描画します。
+ * レトロな雰囲気を演出するための単純な図形描画を行います。
+ */
 export class WireframeRenderer implements IRenderer {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
@@ -10,6 +16,14 @@ export class WireframeRenderer implements IRenderer {
     private height: number = 0;
     private resizeBound = this.resize.bind(this);
 
+    /**
+     * レンダラーを初期化します。
+     * 
+     * キャンバス要素を作成し、指定されたコンテナに追加します。
+     * 
+     * @param container - キャンバスを追加する親要素
+     * @throws {Error} キャンバスまたはコンテキストの作成に失敗した場合
+     */
     initialize(container: HTMLElement): void {
         this.canvas = document.createElement('canvas');
         if (!this.canvas) {
@@ -28,10 +42,17 @@ export class WireframeRenderer implements IRenderer {
         window.addEventListener('resize', this.resizeBound);
     }
 
+    /**
+     * レンダラーのリソースを破棄します。
+     * イベントリスナーの解除などを行います。
+     */
     dispose(): void {
         window.removeEventListener('resize', this.resizeBound);
     }
 
+    /**
+     * キャンバスのサイズをウィンドウサイズに合わせます。
+     */
     private resize(): void {
         if (!this.canvas) return;
         this.width = window.innerWidth;
@@ -40,12 +61,25 @@ export class WireframeRenderer implements IRenderer {
         this.canvas.height = this.height;
     }
 
+    /**
+     * 画面をクリアします。
+     * 背景色（黒）で塗りつぶします。
+     */
     clear(): void {
         if (!this.ctx) return;
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
+    /**
+     * 着陸船を描画します。
+     * 
+     * @param position - 位置
+     * @param rotation - 回転角度
+     * @param isThrusting - 推力噴射中かどうか
+     * @param isCrashed - クラッシュ状態かどうか
+     * @param isSafe - 着陸可能な状態（速度・角度が安全圏内）かどうか
+     */
     drawLander(position: Vector2, rotation: number, isThrusting: boolean, isCrashed: boolean, isSafe: boolean): void {
         if (!this.ctx) {
             Debug.error("drawLander: No context!");
@@ -129,6 +163,12 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.restore();
     }
 
+    /**
+     * 地形を描画します。
+     * 
+     * @param points - 地形を構成する点の配列
+     * @param pads - 着陸パッドの情報（オプション）
+     */
     drawTerrain(points: Vector2[], pads?: { startIndex: number, endIndex: number, multiplier: number }[]): void {
         if (!this.ctx || points.length === 0) return;
 
@@ -177,6 +217,11 @@ export class WireframeRenderer implements IRenderer {
         }
     }
 
+    /**
+     * デブリ（破片）を描画します。
+     * 
+     * @param debris - デブリの配列
+     */
     drawDebris(debris: { position: Vector2, rotation: number, size: number }[]): void {
         if (!this.ctx) return;
 
@@ -202,6 +247,13 @@ export class WireframeRenderer implements IRenderer {
         });
     }
 
+    /**
+     * UI（HUD）を描画します。
+     * 
+     * @param state - ゲーム状態
+     * @param velocity - 現在の速度
+     * @param altitude - 現在の高度
+     */
     drawUI(state: GameState, velocity: Vector2, altitude: number): void {
         if (!this.ctx) return;
         this.ctx.fillStyle = '#FFFFFF';
@@ -218,6 +270,12 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.fillText(`ALTITUDE: ${Math.floor(altitude)}`, this.width - 200, 70);
     }
 
+    /**
+     * 画面中央にメッセージを描画します。
+     * 
+     * @param message - メインメッセージ
+     * @param subMessage - サブメッセージ
+     */
     drawMessage(message: string, subMessage: string): void {
         if (!this.ctx) return;
         this.ctx.fillStyle = '#FFFFFF';
