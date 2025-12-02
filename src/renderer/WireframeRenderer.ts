@@ -2,7 +2,7 @@ import type { IRenderer } from './IRenderer';
 import { Vector2 } from '../core/Vector2';
 import { GameState } from '../core/GameState';
 import { Debug } from '../core/Debug';
-import { pixelsToMeters } from '../core/Constants';
+import { pixelsToMeters, SCORE_SCREEN_CONSTANTS } from '../core/Constants';
 
 /**
  * ワイヤーフレーム描画を行うレンダラークラス。
@@ -290,6 +290,71 @@ export class WireframeRenderer implements IRenderer {
             this.ctx.font = '20px monospace';
             this.ctx.fillText(subMessage, this.width / 2, this.height / 2 + 40);
         }
+
+        this.ctx.textAlign = 'left'; // Reset
+    }
+
+    /**
+     * スコア画面を描画します。
+     * 
+     * @param state - ゲーム状態
+     * @param canContinue - 5秒経過して続行可能かどうか
+     */
+    drawScoreScreen(state: GameState, canContinue: boolean): void {
+        if (!this.ctx) return;
+
+        const { DIALOG_WIDTH, DIALOG_HEIGHT, PADDING, LINE_HEIGHT } = SCORE_SCREEN_CONSTANTS;
+
+        // ダイアログの位置を計算
+        const x = (this.width - DIALOG_WIDTH) / 2;
+        const y = (this.height - DIALOG_HEIGHT) / 2;
+
+        // ダイアログボックスを描画
+        this.ctx.strokeStyle = '#00FF00';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
+
+        // タイトル
+        this.ctx.fillStyle = '#00FF00';
+        this.ctx.font = '30px monospace';
+        this.ctx.textAlign = 'center';
+        const title = state.status === 'LANDED' ? 'MISSION SUCCESS' : 'MISSION FAILED';
+        this.ctx.fillText(title, this.width / 2, y + PADDING + 30);
+
+        // 統計情報
+        this.ctx.font = '16px monospace';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = '#FFFFFF';
+
+        let currentY = y + PADDING + 70;
+
+        // プレイ時間
+        this.ctx.fillText(`Play Time: ${state.playTime.toFixed(1)}s`, x + PADDING, currentY);
+        currentY += LINE_HEIGHT;
+
+        // 使用燃料
+        this.ctx.fillText(`Fuel Used: ${state.fuelUsed.toFixed(0)}`, x + PADDING, currentY);
+        currentY += LINE_HEIGHT;
+
+        // 移動距離（メートル単位で表示）
+        const distanceInMeters = pixelsToMeters(state.totalDistance);
+        this.ctx.fillText(`Distance: ${distanceInMeters.toFixed(1)}m`, x + PADDING, currentY);
+        currentY += LINE_HEIGHT;
+
+        // 最大速度（メートル単位で表示）
+        const maxSpeedInMeters = pixelsToMeters(state.maxSpeed);
+        this.ctx.fillText(`Max Speed: ${maxSpeedInMeters.toFixed(1)}m/s`, x + PADDING, currentY);
+        currentY += LINE_HEIGHT;
+
+        // スコア
+        this.ctx.fillText(`Score: ${state.score}`, x + PADDING, currentY);
+        currentY += LINE_HEIGHT + 10;
+
+        // 続行メッセージ
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = canContinue ? '#00FF00' : '#888888';
+        const message = canContinue ? 'Press any key to continue' : 'Press ESC to skip';
+        this.ctx.fillText(message, this.width / 2, y + DIALOG_HEIGHT - PADDING - 10);
 
         this.ctx.textAlign = 'left'; // Reset
     }

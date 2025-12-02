@@ -33,6 +33,22 @@ export class GameState {
     /** ハイスコア */
     public highScore: number = 0;
 
+    /** プレイ時間（秒） */
+    public playTime: number = 0;
+
+    /** 使用燃料 */
+    public fuelUsed: number = 0;
+
+    /** 総移動距離（ピクセル） */
+    public totalDistance: number = 0;
+
+    /** 最大速度（ピクセル/秒） */
+    public maxSpeed: number = 0;
+
+    /** ゲーム開始時刻（タイムスタンプ） */
+    public gameStartTime: number = 0;
+
+
     /**
      * 燃料を消費します。
      * 
