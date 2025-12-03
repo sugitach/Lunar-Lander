@@ -314,6 +314,16 @@ export class WireframeRenderer implements IRenderer {
      * @param footer - フッターメッセージ（オプション）
      * @param highlightIndex - ハイライトする行のインデックス（オプション）
      */
+    private offscreenCanvas: HTMLCanvasElement | null = null;
+
+    /**
+     * モーダルダイアログを描画します。
+     * 
+     * @param title - タイトル
+     * @param content - コンテンツ行の配列
+     * @param footer - フッターメッセージ（オプション）
+     * @param highlightIndex - ハイライトする行のインデックス（オプション）
+     */
     private drawModalDialog(title: string, content: string[], footer?: string, highlightIndex: number = -1): void {
         if (!this.ctx) return;
 
@@ -322,70 +332,71 @@ export class WireframeRenderer implements IRenderer {
         // ダイアログの位置を計算
         const x = (this.width - DIALOG_WIDTH) / 2;
         const y = (this.height - DIALOG_HEIGHT) / 2;
+        const centerX = this.width / 2;
 
-        // 背景をぼかして暗くする
-        // 1. まず現在の画面をキャプチャ
-        this.ctx.save();
+        // 背景をぼかして暗くする (Offscreen Canvas使用)
+        if (!this.offscreenCanvas) {
+            this.offscreenCanvas = document.createElement('canvas');
+        }
+        if (this.offscreenCanvas.width !== this.width || this.offscreenCanvas.height !== this.height) {
+            this.offscreenCanvas.width = this.width;
+            this.offscreenCanvas.height = this.height;
+        }
 
-        // 2. ダイアログ領域にぼかしフィルターを適用
-        this.ctx.filter = 'blur(4px)';
-        this.ctx.drawImage(this.canvas!, x, y, DIALOG_WIDTH, DIALOG_HEIGHT, x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
+        const offCtx = this.offscreenCanvas.getContext('2d');
+        if (offCtx) {
+            // 1. 現在の画面をオフスクリーンにコピー
+            offCtx.clearRect(0, 0, this.width, this.height);
+            offCtx.drawImage(this.canvas!, 0, 0);
 
-        // 3. フィルターをリセット
-        this.ctx.filter = 'none';
+            // 2. オフスクリーンからダイアログ領域だけをブラー付きでメインに描画
+            this.ctx.save();
+            this.ctx.filter = 'blur(4px)';
+            this.ctx.drawImage(this.offscreenCanvas, x, y, DIALOG_WIDTH, DIALOG_HEIGHT, x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
+            this.ctx.restore();
+        }
 
-        // 4. 半透明の黒をオーバーレイ
+        // 3. 半透明の黒をオーバーレイ
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         this.ctx.fillRect(x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
-
-        this.ctx.restore();
 
         // ダイアログの枠線を描画
         this.ctx.strokeStyle = '#00FF00';
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
 
+        // テキスト描画設定（共通）
+        this.ctx.textAlign = 'center';
+
         // タイトル
         this.ctx.fillStyle = '#00FF00';
         this.ctx.font = '30px monospace';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(title, this.width / 2, y + PADDING + 30);
+        this.ctx.fillText(title, centerX, y + PADDING + 30);
 
         // コンテンツ
         this.ctx.font = '16px monospace';
-        this.ctx.textAlign = 'left';
 
         let currentY = y + PADDING + 70;
-        const ctx = this.ctx;
 
         content.forEach((line, index) => {
             if (index === highlightIndex) {
-                ctx.fillStyle = '#00FF00';
-                ctx.textAlign = 'center'; // ハイライトも中央揃え
-                ctx.fillText(`[ ${line} ]`, this.width / 2, currentY);
-                ctx.textAlign = 'left'; // Reset for others
+                this.ctx!.fillStyle = '#00FF00';
+                this.ctx!.fillText(`[ ${line} ]`, centerX, currentY);
             } else {
-                ctx.fillStyle = '#FFFFFF';
-                // Center text if it's a menu (implied by highlightIndex usage)
-                if (highlightIndex !== -1) {
-                    ctx.textAlign = 'center';
-                    ctx.fillText(line, this.width / 2, currentY);
-                    ctx.textAlign = 'left';
-                } else {
-                    ctx.fillText(line, x + PADDING, currentY);
-                }
+                this.ctx!.fillStyle = '#FFFFFF';
+                this.ctx!.fillText(line, centerX, currentY);
             }
             currentY += LINE_HEIGHT;
         });
 
         // フッター
         if (footer) {
-            this.ctx.textAlign = 'center';
             this.ctx.fillStyle = '#888888';
             if (footer.includes('continue')) this.ctx.fillStyle = '#00FF00';
-            this.ctx.fillText(footer, this.width / 2, y + DIALOG_HEIGHT - PADDING - 10);
-            this.ctx.textAlign = 'left';
+            this.ctx.fillText(footer, centerX, y + DIALOG_HEIGHT - PADDING - 10);
         }
+
+        this.ctx.textAlign = 'left'; // Reset
     }
 
     /**
