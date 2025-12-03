@@ -29,7 +29,16 @@ export const TERRAIN_CONSTANTS = {
     MIN_PAD_DISTANCE: 100     // minimum distance between pads
 } as const;
 
-export const DIFFICULTY_SETTINGS = {
+export interface DifficultySetting {
+    gravity: number;
+    thrust: number;
+    mass: number;
+    initialFuel: number;
+    scoreMultiplier: number;
+    label: string;
+}
+
+export const DIFFICULTY_SETTINGS: Record<string, DifficultySetting> = {
     EASY: {
         gravity: 1.62, // Moon gravity (m/s^2)
         thrust: 4860,  // Force (N)
@@ -62,7 +71,7 @@ export const DIFFICULTY_SETTINGS = {
         scoreMultiplier: 1.0,
         label: "CUSTOM: User Defined Settings"
     }
-} as const;
+};
 
 export const CUSTOM_SETTINGS_RANGES = {
     gravity: { min: 1.0, max: 10.0, step: 0.1 },

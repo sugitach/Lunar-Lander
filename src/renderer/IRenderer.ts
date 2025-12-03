@@ -2,6 +2,7 @@ import { Vector2 } from '../core/Vector2';
 import { GameState, Difficulty } from '../core/GameState';
 import type { LandingPad } from '../entities/Terrain';
 import type { Debris } from '../entities/Debris';
+import type { DifficultySetting } from '../core/Constants';
 
 /**
  * レンダラーのインターフェース。
@@ -86,7 +87,7 @@ export interface IRenderer {
      * @param currentSettings 現在のカスタム設定
      * @param selectedIndex 現在選択されている項目のインデックス
      */
-    drawCustomSettingsScreen(currentSettings: any, selectedIndex: number): void;
+    drawCustomSettingsScreen(currentSettings: DifficultySetting, selectedIndex: number): void;
 
     /**
      * レンダラーのリソースを解放します。

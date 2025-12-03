@@ -7,7 +7,7 @@ import { CollisionDetector } from './CollisionDetector';
 import { GameStateManager } from './GameStateManager';
 import { DebrisManager } from './DebrisManager';
 import type { ViewportSize } from './ViewportSize';
-import { DIFFICULTY_SETTINGS, SCORE_SCREEN_CONSTANTS, CUSTOM_SETTINGS_RANGES } from './Constants';
+import { DIFFICULTY_SETTINGS, SCORE_SCREEN_CONSTANTS, CUSTOM_SETTINGS_RANGES, type DifficultySetting } from './Constants';
 
 /**
  * ゲームのメインループを管理するクラス。
@@ -381,7 +381,7 @@ export class GameLoop {
         this.waitForKeyRelease = true; // Wait for key release on reset
     }
 
-    private adjustCustomSetting(settings: any, ranges: any, direction: number): void {
+    private adjustCustomSetting(settings: DifficultySetting, ranges: typeof CUSTOM_SETTINGS_RANGES, direction: number): void {
         if (this.customSettingsIndex === 0) { // Gravity
             settings.gravity = Math.max(ranges.gravity.min, Math.min(ranges.gravity.max, settings.gravity + ranges.gravity.step * direction));
         } else if (this.customSettingsIndex === 1) { // Thrust
@@ -394,7 +394,7 @@ export class GameLoop {
         this.calculateScoreMultiplier(settings);
     }
 
-    private calculateScoreMultiplier(settings: any): void {
+    private calculateScoreMultiplier(settings: DifficultySetting): void {
         const norm = DIFFICULTY_SETTINGS.NORMAL;
 
         // Coefficients

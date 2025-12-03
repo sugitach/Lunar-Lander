@@ -2,7 +2,7 @@ import type { IRenderer } from './IRenderer';
 import { Vector2 } from '../core/Vector2';
 import { GameState, Difficulty } from '../core/GameState';
 import { Debug } from '../core/Debug';
-import { pixelsToMeters, SCORE_SCREEN_CONSTANTS, DIFFICULTY_SETTINGS } from '../core/Constants';
+import { pixelsToMeters, SCORE_SCREEN_CONSTANTS, DIFFICULTY_SETTINGS, type DifficultySetting } from '../core/Constants';
 
 /**
  * ワイヤーフレーム描画を行うレンダラークラス。
@@ -445,7 +445,7 @@ export class WireframeRenderer implements IRenderer {
      * @param currentSettings - 現在のカスタム設定
      * @param selectedIndex - 現在選択されている項目のインデックス
      */
-    drawCustomSettingsScreen(currentSettings: typeof DIFFICULTY_SETTINGS.CUSTOM, selectedIndex: number): void {
+    drawCustomSettingsScreen(currentSettings: DifficultySetting, selectedIndex: number): void {
         const items = [
             { label: 'Gravity', value: `${currentSettings.gravity.toFixed(2)} m/s²` },
             { label: 'Thrust', value: `${currentSettings.thrust} N` },
