@@ -276,7 +276,7 @@ export class GameLoop {
         // Score screen logic
         if (this.scoreScreenStartTime === 0) {
             this.scoreScreenStartTime = now;
-            this.gameState.endTime = now; // Set end time for score calculation
+            this.gameState.endTime = now; // Mark the time the game ended
             this.restartReady = false; // Reset restart ready flag
         }
 
