@@ -113,7 +113,10 @@ export class GameStateManager {
      * @returns 安全に着陸できる場合true
      */
     isSafeToLand(lander: Lander): boolean {
-        const maxSafeVelocity = 2.0;
+        // 着陸可能な閾値（ピクセル/秒単位）
+        // TIME_SCALEの影響で実質的な速度感が変わっているため、閾値を調整
+        // 以前: 2.0 pixels/s -> 新しい物理モデルでは 8.0 pixels/s に緩和
+        const maxSafeVelocity = 8.0; // pixels/s
         const maxSafeRotation = 0.3; // radians (~17 degrees)
         const upright = -Math.PI / 2;
 

@@ -2,12 +2,12 @@
  * ゲームの状態を表す定数オブジェクト。
  */
 export const GameStatus = {
-    /** ゲームプレイ中 */
+    WAITING: 'WAITING',
     PLAYING: 'PLAYING',
-    /** クラッシュした */
+    LANDED: 'LANDED',
     CRASHED: 'CRASHED',
-    /** 着陸成功 */
-    LANDED: 'LANDED'
+    SELECTING_DIFFICULTY: 'SELECTING_DIFFICULTY',
+    SETTING_CUSTOM_DIFFICULTY: 'SETTING_CUSTOM_DIFFICULTY'
 } as const;
 
 /**
@@ -16,13 +16,28 @@ export const GameStatus = {
 export type GameStatus = typeof GameStatus[keyof typeof GameStatus];
 
 /**
+ * 難易度を表す定数オブジェクト。
+ */
+export const Difficulty = {
+    EASY: 'EASY',
+    NORMAL: 'NORMAL',
+    HARD: 'HARD',
+    CUSTOM: 'CUSTOM'
+} as const;
+
+/**
+ * Difficulty型の定義。
+ */
+export type Difficulty = typeof Difficulty[keyof typeof Difficulty];
+
+/**
  * ゲームの状態を管理するクラス。
  * 
  * スコア、燃料、ゲームステータスなどを保持します。
  */
 export class GameState {
     /** 現在のゲームステータス */
-    public status: GameStatus = GameStatus.PLAYING;
+    public status: GameStatus = GameStatus.SELECTING_DIFFICULTY;
 
     /** 現在のスコア */
     public score: number = 0;
@@ -32,8 +47,13 @@ export class GameState {
 
     /** ハイスコア */
     public highScore: number = 0;
+    public difficulty: Difficulty = Difficulty.NORMAL;
 
-    /** プレイ時間（秒） */
+    /** ゲーム開始時間 (ms) */
+    public gameStartTime: number = 0;
+    /** ゲーム終了時間 (ms) */
+    public endTime: number = 0;
+    /** プレイ時間 (秒) */
     public playTime: number = 0;
 
     /** 使用燃料 */
@@ -44,9 +64,6 @@ export class GameState {
 
     /** 最大速度（ピクセル/秒） */
     public maxSpeed: number = 0;
-
-    /** ゲーム開始時刻（タイムスタンプ） */
-    public gameStartTime: number = 0;
 
 
     /**

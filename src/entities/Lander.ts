@@ -2,7 +2,7 @@ import { Vector2 } from '../core/Vector2';
 import { Physics, ROTATION_SPEED, FUEL_CONSUMPTION_THRUST, FUEL_CONSUMPTION_ROTATE } from '../core/Physics';
 import type { IInputSource } from '../core/IInputSource';
 import { GameState } from '../core/GameState';
-import { LANDER_CONSTANTS } from '../core/Constants';
+import { LANDER_CONSTANTS, DIFFICULTY_SETTINGS, PHYSICS_CONSTANTS } from '../core/Constants';
 
 /**
  * 着陸船（Lander）クラス。
@@ -25,6 +25,9 @@ export class Lander {
     public width: number = 20;
     /** 機体の高さ */
     public height: number = 20;
+
+    /** 機体の質量 (kg) */
+    public mass: number = 1000;
 
     /**
      * Landerのインスタンスを生成します。
@@ -56,36 +59,42 @@ export class Lander {
         this.previousRotation = this.rotation;
 
         // Scale factors for frame-rate independence
-        // Assuming original values were tuned for TARGET_FPS
-        const timeScale = deltaTime * LANDER_CONSTANTS.TARGET_FPS;
+        const frameScale = deltaTime * LANDER_CONSTANTS.TARGET_FPS;
+
+        // Get difficulty settings
+        const settings = DIFFICULTY_SETTINGS[gameState.difficulty];
+        const gravityAccel = settings.gravity;
+        const thrustForce = settings.thrust;
+        this.mass = settings.mass;
 
         if (gameState.isFuelEmpty()) {
             // Just gravity if no fuel
-            this.velocity = Physics.applyGravity(this.velocity, timeScale);
-            this.position = this.position.add(this.velocity.multiply(timeScale));
+            this.velocity = Physics.applyGravity(this.velocity, gravityAccel, deltaTime);
+            // Update position using TIME_SCALE to match the accelerated simulation
+            this.position = this.position.add(this.velocity.multiply(deltaTime * PHYSICS_CONSTANTS.TIME_SCALE));
             return;
         }
 
         // Rotation
         if (input.isRotatingLeft) {
-            this.rotation -= ROTATION_SPEED * timeScale;
-            gameState.consumeFuel(FUEL_CONSUMPTION_ROTATE * timeScale);
+            this.rotation -= ROTATION_SPEED * frameScale;
+            gameState.consumeFuel(FUEL_CONSUMPTION_ROTATE * frameScale);
         }
         if (input.isRotatingRight) {
-            this.rotation += ROTATION_SPEED * timeScale;
-            gameState.consumeFuel(FUEL_CONSUMPTION_ROTATE * timeScale);
+            this.rotation += ROTATION_SPEED * frameScale;
+            gameState.consumeFuel(FUEL_CONSUMPTION_ROTATE * frameScale);
         }
 
         // Thrust
         if (input.isThrusting) {
-            this.velocity = Physics.applyThrust(this.velocity, this.rotation, timeScale);
-            gameState.consumeFuel(FUEL_CONSUMPTION_THRUST * timeScale);
+            this.velocity = Physics.applyThrust(this.velocity, this.rotation, thrustForce, this.mass, deltaTime);
+            gameState.consumeFuel(FUEL_CONSUMPTION_THRUST * frameScale);
         }
 
         // Gravity
-        this.velocity = Physics.applyGravity(this.velocity, timeScale);
+        this.velocity = Physics.applyGravity(this.velocity, gravityAccel, deltaTime);
 
         // Update position
-        this.position = this.position.add(this.velocity.multiply(timeScale));
+        this.position = this.position.add(this.velocity.multiply(deltaTime * PHYSICS_CONSTANTS.TIME_SCALE));
     }
 }

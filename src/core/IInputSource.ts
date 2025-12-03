@@ -20,6 +20,15 @@ export interface IInputSource {
     /** ESCキーが押されているか */
     readonly isEscaping: boolean;
 
+    /** 上キーが押されているか（メニュー用） */
+    readonly isUp: boolean;
+
+    /** 下キーが押されているか（メニュー用） */
+    readonly isDown: boolean;
+
+    /** 決定キー（Space/Enter）が押されているか（メニュー用） */
+    readonly isConfirm: boolean;
+
     /**
      * 入力ソースのリソースを解放します。
      */

@@ -1,7 +1,8 @@
 import { Vector2 } from '../core/Vector2';
-import { GameState } from '../core/GameState';
+import { GameState, Difficulty } from '../core/GameState';
 import type { LandingPad } from '../entities/Terrain';
 import type { Debris } from '../entities/Debris';
+import type { DifficultySetting } from '../core/Constants';
 
 /**
  * レンダラーのインターフェース。
@@ -73,6 +74,20 @@ export interface IRenderer {
      * @param canContinue - 5秒経過して続行可能かどうか
      */
     drawScoreScreen(state: GameState, canContinue: boolean): void;
+
+    /**
+     * 難易度選択画面を描画します。
+     * 
+     * @param currentSelection - 現在選択されている難易度
+     */
+    drawDifficultyScreen(currentSelection: Difficulty): void;
+
+    /**
+     * カスタム難易度設定画面を描画します。
+     * @param currentSettings 現在のカスタム設定
+     * @param selectedIndex 現在選択されている項目のインデックス
+     */
+    drawCustomSettingsScreen(currentSettings: DifficultySetting, selectedIndex: number): void;
 
     /**
      * レンダラーのリソースを解放します。
