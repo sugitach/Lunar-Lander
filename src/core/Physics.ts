@@ -1,10 +1,7 @@
 import { Vector2 } from './Vector2';
-import { PHYSICS_CONSTANTS } from './Constants';
+import { PHYSICS_CONSTANTS, DISTANCE_CONSTANTS } from './Constants';
 
-/** 重力ベクトル（下向き） */
-export const GRAVITY = new Vector2(0, PHYSICS_CONSTANTS.GRAVITY_Y); // Gravity force
-/** エンジンの推力 */
-export const THRUST_POWER = 0.15; // Engine thrust power
+
 /** 回転速度（ラジアン/フレーム） */
 export const ROTATION_SPEED = 0.05; // Radians per frame
 /** 推力使用時の燃料消費量 */
@@ -22,11 +19,16 @@ export class Physics {
      * 速度ベクトルに重力を適用します。
      * 
      * @param velocity - 現在の速度ベクトル
-     * @param timeScale - 時間スケール（通常は1）
+     * @param gravityAccel - 重力加速度（m/s^2）
+     * @param timeScale - 時間スケール（シミュレーション速度調整用）
      * @returns 重力適用後の新しい速度ベクトル
      */
-    static applyGravity(velocity: Vector2, timeScale: number): Vector2 {
-        return velocity.add(GRAVITY.multiply(timeScale));
+    static applyGravity(velocity: Vector2, gravityAccel: number, timeScale: number): Vector2 {
+        // Convert gravity from m/s^2 to px/s^2
+        const gravityPx = gravityAccel * DISTANCE_CONSTANTS.PIXELS_PER_METER;
+        // Apply gravity: v = v0 + a * t
+        // timeScale is applied to delta time effectively
+        return velocity.add(new Vector2(0, gravityPx).multiply(timeScale * PHYSICS_CONSTANTS.TIME_SCALE));
     }
 
     /**
@@ -34,12 +36,19 @@ export class Physics {
      * 
      * @param velocity - 現在の速度ベクトル
      * @param angle - 推力の方向（ラジアン）
-     * @param timeScale - 時間スケール（通常は1）
+     * @param thrustForce - 推力（N）
+     * @param mass - 機体質量（kg）
+     * @param timeScale - 時間スケール（シミュレーション速度調整用）
      * @returns 推力適用後の新しい速度ベクトル
      */
-    static applyThrust(velocity: Vector2, angle: number, timeScale: number): Vector2 {
-        const thrust = new Vector2(Math.cos(angle), Math.sin(angle)).multiply(THRUST_POWER * timeScale);
-        return velocity.add(thrust);
+    static applyThrust(velocity: Vector2, angle: number, thrustForce: number, mass: number, timeScale: number): Vector2 {
+        // Calculate acceleration: a = F / m (m/s^2)
+        const acceleration = thrustForce / mass;
+        // Convert to px/s^2
+        const accelerationPx = acceleration * DISTANCE_CONSTANTS.PIXELS_PER_METER;
+
+        const thrustVector = new Vector2(Math.cos(angle), Math.sin(angle)).multiply(accelerationPx * timeScale * PHYSICS_CONSTANTS.TIME_SCALE);
+        return velocity.add(thrustVector);
     }
 
     /**

@@ -1,8 +1,8 @@
 import type { IRenderer } from './IRenderer';
 import { Vector2 } from '../core/Vector2';
-import { GameState } from '../core/GameState';
+import { GameState, Difficulty } from '../core/GameState';
 import { Debug } from '../core/Debug';
-import { pixelsToMeters, SCORE_SCREEN_CONSTANTS } from '../core/Constants';
+import { pixelsToMeters, SCORE_SCREEN_CONSTANTS, DIFFICULTY_SETTINGS } from '../core/Constants';
 
 /**
  * ワイヤーフレーム描画を行うレンダラークラス。
@@ -27,16 +27,22 @@ export class WireframeRenderer implements IRenderer {
      */
     initialize(container: HTMLElement): void {
         this.canvas = document.createElement('canvas');
+
         if (!this.canvas) {
-            throw new Error('Failed to create canvas element');
+            const error = 'Failed to create canvas element';
+            console.error('[RENDERER]', error);
+            throw new Error(error);
         }
 
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
 
         this.ctx = this.canvas.getContext('2d');
+
         if (!this.ctx) {
-            throw new Error('Failed to get 2D rendering context');
+            const error = 'Failed to get 2D rendering context';
+            console.error('[RENDERER]', error);
+            throw new Error(error);
         }
 
         this.resize();
@@ -300,7 +306,15 @@ export class WireframeRenderer implements IRenderer {
      * @param state - ゲーム状態
      * @param canContinue - 5秒経過して続行可能かどうか
      */
-    drawScoreScreen(state: GameState, canContinue: boolean): void {
+    /**
+     * モーダルダイアログを描画します。
+     * 
+     * @param title - タイトル
+     * @param content - コンテンツ行の配列
+     * @param footer - フッターメッセージ（オプション）
+     * @param highlightIndex - ハイライトする行のインデックス（オプション）
+     */
+    private drawModalDialog(title: string, content: string[], footer?: string, highlightIndex: number = -1): void {
         if (!this.ctx) return;
 
         const { DIALOG_WIDTH, DIALOG_HEIGHT, PADDING, LINE_HEIGHT } = SCORE_SCREEN_CONSTANTS;
@@ -309,7 +323,24 @@ export class WireframeRenderer implements IRenderer {
         const x = (this.width - DIALOG_WIDTH) / 2;
         const y = (this.height - DIALOG_HEIGHT) / 2;
 
-        // ダイアログボックスを描画
+        // 背景をぼかして暗くする
+        // 1. まず現在の画面をキャプチャ
+        this.ctx.save();
+
+        // 2. ダイアログ領域にぼかしフィルターを適用
+        this.ctx.filter = 'blur(4px)';
+        this.ctx.drawImage(this.canvas!, x, y, DIALOG_WIDTH, DIALOG_HEIGHT, x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
+
+        // 3. フィルターをリセット
+        this.ctx.filter = 'none';
+
+        // 4. 半透明の黒をオーバーレイ
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
+
+        this.ctx.restore();
+
+        // ダイアログの枠線を描画
         this.ctx.strokeStyle = '#00FF00';
         this.ctx.lineWidth = 2;
         this.ctx.strokeRect(x, y, DIALOG_WIDTH, DIALOG_HEIGHT);
@@ -318,44 +349,159 @@ export class WireframeRenderer implements IRenderer {
         this.ctx.fillStyle = '#00FF00';
         this.ctx.font = '30px monospace';
         this.ctx.textAlign = 'center';
-        const title = state.status === 'LANDED' ? 'MISSION SUCCESS' : 'MISSION FAILED';
         this.ctx.fillText(title, this.width / 2, y + PADDING + 30);
 
-        // 統計情報
+        // コンテンツ
         this.ctx.font = '16px monospace';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = '#FFFFFF';
 
         let currentY = y + PADDING + 70;
+        const ctx = this.ctx;
 
-        // プレイ時間
-        this.ctx.fillText(`Play Time: ${state.playTime.toFixed(1)}s`, x + PADDING, currentY);
-        currentY += LINE_HEIGHT;
+        content.forEach((line, index) => {
+            if (index === highlightIndex) {
+                ctx.fillStyle = '#00FF00';
+                ctx.textAlign = 'center'; // ハイライトも中央揃え
+                ctx.fillText(`[ ${line} ]`, this.width / 2, currentY);
+                ctx.textAlign = 'left'; // Reset for others
+            } else {
+                ctx.fillStyle = '#FFFFFF';
+                // Center text if it's a menu (implied by highlightIndex usage)
+                if (highlightIndex !== -1) {
+                    ctx.textAlign = 'center';
+                    ctx.fillText(line, this.width / 2, currentY);
+                    ctx.textAlign = 'left';
+                } else {
+                    ctx.fillText(line, x + PADDING, currentY);
+                }
+            }
+            currentY += LINE_HEIGHT;
+        });
 
-        // 使用燃料
-        this.ctx.fillText(`Fuel Used: ${state.fuelUsed.toFixed(0)}`, x + PADDING, currentY);
-        currentY += LINE_HEIGHT;
+        // フッター
+        if (footer) {
+            this.ctx.textAlign = 'center';
+            this.ctx.fillStyle = '#888888';
+            if (footer.includes('continue')) this.ctx.fillStyle = '#00FF00';
+            this.ctx.fillText(footer, this.width / 2, y + DIALOG_HEIGHT - PADDING - 10);
+            this.ctx.textAlign = 'left';
+        }
+    }
 
-        // 移動距離（メートル単位で表示）
+    /**
+     * 難易度選択画面を描画します。
+     * 
+     * @param currentSelection - 現在選択されている難易度
+     */
+    drawDifficultyScreen(currentSelection: Difficulty): void {
+        const content = [
+            'EASY',
+            'NORMAL',
+            'HARD',
+            'CUSTOM'
+        ];
+
+        const difficulties = ['EASY', 'NORMAL', 'HARD', 'CUSTOM'];
+        const highlightIndex = difficulties.indexOf(currentSelection);
+
+        // Get settings for current selection
+        const settings = DIFFICULTY_SETTINGS[currentSelection];
+
+        const footer = 'Use UP/DOWN to select, SPACE/ENTER to confirm';
+
+        this.drawModalDialog('SELECT DIFFICULTY', content, footer, highlightIndex);
+
+        // Draw details below the dialog content (inside the dialog, but lower half)
+        if (this.ctx) {
+            const { DIALOG_WIDTH, DIALOG_HEIGHT, PADDING } = SCORE_SCREEN_CONSTANTS;
+            const x = (this.width - DIALOG_WIDTH) / 2;
+            const y = (this.height - DIALOG_HEIGHT) / 2;
+            const detailY = y + 200; // Position for details
+
+            this.ctx.fillStyle = '#AAAAAA';
+            this.ctx.font = '14px monospace';
+            this.ctx.textAlign = 'left';
+
+            const leftX = x + PADDING + 20;
+            const rightX = x + DIALOG_WIDTH / 2 + 10;
+            const lineHeight = 20;
+
+            this.ctx.fillText(`Gravity: ${settings.gravity.toFixed(2)} m/s²`, leftX, detailY);
+            this.ctx.fillText(`Thrust:  ${settings.thrust} N`, leftX, detailY + lineHeight);
+            this.ctx.fillText(`Fuel:    ${settings.initialFuel}`, rightX, detailY);
+            this.ctx.fillText(`Score:   x${settings.scoreMultiplier.toFixed(1)}`, rightX, detailY + lineHeight);
+
+            // Draw label
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(settings.label, this.width / 2, detailY + lineHeight * 2 + 10);
+            this.ctx.textAlign = 'left';
+        }
+    }
+
+    /**
+     * カスタム難易度設定画面を描画します。
+     * 
+     * @param currentSettings - 現在のカスタム設定
+     * @param selectedIndex - 現在選択されている項目のインデックス
+     */
+    drawCustomSettingsScreen(currentSettings: typeof DIFFICULTY_SETTINGS.CUSTOM, selectedIndex: number): void {
+        const items = [
+            { label: 'Gravity', value: `${currentSettings.gravity.toFixed(2)} m/s²` },
+            { label: 'Thrust', value: `${currentSettings.thrust} N` },
+            { label: 'Fuel', value: `${currentSettings.initialFuel}` },
+            { label: 'Start Game', value: '' },
+            { label: 'Cancel', value: '' }
+        ];
+
+        const content = items.map((item, index) => {
+            if (index === 3 || index === 4) return item.label; // Start Game or Cancel
+            if (index === selectedIndex) {
+                return `${item.label}: ← ${item.value} →`;
+            }
+            return `${item.label}: ${item.value}`;
+        });
+
+        const footer = 'UP/DOWN: Select, LEFT/RIGHT: Adjust';
+
+        this.drawModalDialog('CUSTOM SETTINGS', content, footer, selectedIndex);
+
+        // Show Score Multiplier (calculated)
+        if (this.ctx) {
+            const { DIALOG_WIDTH, DIALOG_HEIGHT } = SCORE_SCREEN_CONSTANTS;
+            const y = (this.height - DIALOG_HEIGHT) / 2;
+            const detailY = y + 230;
+
+            this.ctx.fillStyle = '#FFFF00';
+            this.ctx.font = '16px monospace';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(`Score Multiplier: x${currentSettings.scoreMultiplier.toFixed(2)}`, this.width / 2, detailY);
+            this.ctx.textAlign = 'left';
+        }
+    }
+
+    /**
+     * スコア画面を描画します。
+     * 
+     * @param state - ゲーム状態
+     * @param canContinue - 5秒経過して続行可能かどうか
+     */
+    drawScoreScreen(state: GameState, canContinue: boolean): void {
+        const title = state.status === 'LANDED' ? 'MISSION SUCCESS' : 'MISSION FAILED';
+
         const distanceInMeters = pixelsToMeters(state.totalDistance);
-        this.ctx.fillText(`Distance: ${distanceInMeters.toFixed(1)}m`, x + PADDING, currentY);
-        currentY += LINE_HEIGHT;
-
-        // 最大速度（メートル単位で表示）
         const maxSpeedInMeters = pixelsToMeters(state.maxSpeed);
-        this.ctx.fillText(`Max Speed: ${maxSpeedInMeters.toFixed(1)}m/s`, x + PADDING, currentY);
-        currentY += LINE_HEIGHT;
 
-        // スコア
-        this.ctx.fillText(`Score: ${state.score}`, x + PADDING, currentY);
-        currentY += LINE_HEIGHT + 10;
+        const content = [
+            `Play Time: ${state.playTime.toFixed(1)}s`,
+            `Fuel Used: ${state.fuelUsed.toFixed(0)}`,
+            `Distance: ${distanceInMeters.toFixed(1)}m`,
+            `Max Speed: ${maxSpeedInMeters.toFixed(1)}m/s`,
+            `Score: ${state.score}`
+        ];
 
-        // 続行メッセージ
-        this.ctx.textAlign = 'center';
-        this.ctx.fillStyle = canContinue ? '#00FF00' : '#888888';
-        const message = canContinue ? 'Press any key to continue' : 'Press ESC to skip';
-        this.ctx.fillText(message, this.width / 2, y + DIALOG_HEIGHT - PADDING - 10);
+        const footer = canContinue ? 'Press any key to continue' : 'Press ESC to skip';
 
-        this.ctx.textAlign = 'left'; // Reset
+        this.drawModalDialog(title, content, footer);
     }
 }
