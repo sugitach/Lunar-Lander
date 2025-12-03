@@ -2,7 +2,18 @@
 
 レトロスタイルのLunar Lander(月面着陸船)ゲーム。ワイヤーフレームグラフィックスで、クラシックなアーケードゲームの雰囲気を再現しています。
 
-![Game Screenshot](https://via.placeholder.com/800x450/000000/FFFFFF?text=Lunar+Lander+Game)
+![Game Screenshot](docs/images/gameplay.png)
+
+## 🤖 AI生成プロジェクトについて
+
+このプロダクトは **Google Gemini 2.0 Flash (Experimental)** および **Antigravity** のテストのために作成されました。
+
+**重要な特徴:**
+- 人間が**コードを一行も書かず**、AIへの指示のみで開発されました
+- すべてのコード、テスト、ドキュメントはAIによって生成されています
+- プロジェクト構造、アーキテクチャ設計、実装の詳細まで、すべてAIとの対話を通じて構築されました
+
+このプロジェクトは、最新のAI技術がソフトウェア開発においてどこまで実用的な成果を生み出せるかを実証するものです。
 
 ## 🎮 ゲームについて
 
